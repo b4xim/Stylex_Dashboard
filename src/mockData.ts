@@ -8,163 +8,348 @@ import {
   Stylist,
   VIPClient,
   ConciergeInquiry,
-  SalonSettings
+  SalonSettings,
+  StylistLeave,
+  UserAccount,
+  SystemRole,
 } from './types';
 
-export const LOGO_URL = "https://lh3.googleusercontent.com/aida/AEtjO1VBo3KteTmHWci_KXFQrFVQAFwbZb45oZ5m5qxbwrLdx1TXulIuGAAeuyzqToWzghOiP3jU1D63ysDpX_pEhGjxtB2Jwr4WDlVSSJ-v8fVXpk-dph5fBhlt_orD3AS6IrkoFfmIZJMBwaYevPKFdy012oC-9o__H4_8kgc0PJkydqrpLOkwfGsSYcPmFWWXZOcWvZganZPKw0M4z27cOpvSmCNMhV-NXVRFt9u5ypLVf3lyn8N96KTcHJNn_vN_aOE-rzYdSwAaoA";
+export const INITIAL_USERS: UserAccount[] = [
+  {
+    id: 'user-admin',
+    name: 'Admin',
+    email: 'admin@stylexsalon.in',
+    role: 'Admin',
+    roleTitle: 'Salon Administrator',
+    initials: 'AD',
+    password: 'stylex2024',
+    createdAt: '2024-01-01',
+  },
+  {
+    id: 'user-dev',
+    name: 'Developer',
+    email: 'dev@stylexsalon.in',
+    role: 'Developer',
+    roleTitle: 'Lead Developer & Tech',
+    initials: 'DV',
+    password: 'stylexdev',
+    createdAt: '2024-01-15',
+  },
+];
 
-export const PROMO_BANNER_URL = "https://lh3.googleusercontent.com/aida/AEtjO1XLFXPsXqKzyXqX_v2jEqMUEfPlymM71lSvyplrAl4G-qqpC7gsjYWnZiYWMfivETjG563ezKes05n4Ds-3D5a0G9wZbaUhLlKuRLY_TOh8X65YEqDPzqMn7d7GTIwfixFD5SOSB-hPHL8pOZCzIFBRcN0SyC0d-ZQZZyWEiVftP9GtcPiISKaKY5CvG5lVzDB3Ss6TrzSGUJkJGnusCXrrRfsGZ3iNMnhy61GkPyMTC6k-M9oFP800xSyW";
+export const LOGO_URL = "/logo.png";
+export const LOGO_TXT_URL = "/logo_txt.png";
+export const X_LOGO_URL = "/x_logo.png";
+
+export const PROMO_BANNER_URL = "/images/photos/smoothening.jpg";
 
 export const STYLIST_AVATARS = {
-  elena: "https://lh3.googleusercontent.com/aida-public/AB6AXuDV8JQfDGMb7n8Xbab27rDm63jRghaeStkPOzQ_er0ijydttzWMVLpKE4haPHDMTQznRiFwxUwxJGRGHuZdI3bUYtbDUczY7enejpxFev3CBxSXY_Ly-oEP82AW4hN_Q9WAT6dUSecznze4NxHkLBZWCMN0DWSw7MCqjyjj9CymXL-R2RU-atsClZ0OPSTWvq4nPoZw1VHRDo2KocuZoYeOmwbmN64yj2PeXm9CKbyBifSMaO5OJxrI8Q",
-  marcus: "https://lh3.googleusercontent.com/aida-public/AB6AXuBwCWHs5JTxPn_7bdSoeGE84zy2a0I5ZxX7SrGgIxqFvz57uNk8in9ksmjTOxEQhIrF0txYBrP_pQUCX5zKR9VlSvyKlAFJfLJZiy3pD4MaDqVmBMnZV-UUWsqd4m0phfDW8jRi2ynvcM_Ck83NcY48ZtnsAessEKe7XSpQcySYy5Q377uIZMVoVltKMY6Pn2YqIoi0LRpAk7t1ijILdSnCxfC4fpUkvpWBFLPU09buyadyGr7UBtQrSw",
-  sora: "https://lh3.googleusercontent.com/aida-public/AB6AXuD4UprCWdimHdNrixfxb1sHXSsYdlOELkE2ESjOVuN-svJce5gCZL4IihBbTFAvbt7IqAOt0dDWFU4wjY7zyYcxRUasMQF7_m1hR3wy5ZkA8fjxWn1wLXkm7CbFUFRwFn4qutzBSKi5xzBGdIb9paMUFRZAz66NNMVDtvs1YWAi-erw0ywhdbb4eaouyb4GmEoCjmsNdOI2epxN6pDrdNylxn4RhPtnt6Uqwr60DBOaRtaFkvGcCnUl9w",
-  chloe: "https://lh3.googleusercontent.com/aida-public/AB6AXuBaoFGalI0lxT7s82p7GGZStnqmBuy26HBeO7zqrP8nR0nUC04wWsNDX1TmXh7U74Z3rmif4dVrPXFkJHKJjKDQJWktuWewmZpcXFenFR5V6c_idtzxz3aiNg5bRaDChccFhyh4zUYNqB-v3YoHmntgAxOwo4NtBz0ke-46TtoD2fQQMz7KAoh7PkOcrJ1ociGth0z1OSUERvVmtjyqw1KYhDnniLiBipzOn0dshxLQPEmHiIQs23lSSQ",
-  elenaAlt: "https://lh3.googleusercontent.com/aida-public/AB6AXuDgimlmArDg6eVWjx3nBpOkR318NnI-IZ9yVnNxhMWUtWKkV2jylzgGB-n_y3GpidDZIs1OSov6O3ujBeHTF-_2jqztPcu08FBwcsXYrJMxOcqC0bbKLAPzXOrniFXNS5zfErI2kVudxxxfsTSANlKFi73M8CIsVOcalBsbj-Z68uSEZeeQiTPibSmUISaf0GuB61c5AkIH1X4m5EvINXSkbsrsYBKbSE7DAbfPxLLr3MTF4Xy0CtzQkQ"
+  niya: "https://images.unsplash.com/photo-1595956553066-fe24a8c33395?auto=format&fit=crop&w=400&q=80",
+  abhirami: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
+  saneesh: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
+  sunita: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80",
+  vismaya: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
+  neha: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80"
+};
+
+export const getRelativeDateStr = (offsetDays: number): string => {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 };
 
 export const INITIAL_APPOINTMENTS: Appointment[] = [
   {
     id: "apt-1",
-    time: "10:00 AM",
-    durationMin: 75,
-    clientName: "Camille Vance",
-    clientPhone: "(310) 849-2201",
-    clientInitials: "CV",
+    time: "10:30 AM",
+    durationMin: 45,
+    clientName: "Athira P",
+    clientPhone: "+91 98470 23145",
+    clientEmail: "athira.p@gmail.com",
+    clientInitials: "AP",
     clientTier: "VIP Platinum",
-    serviceName: "Nordic Gloss Balayage",
-    station: "Atelier Suite 1",
-    stylistName: "Elena Vance",
-    stylistAvatar: STYLIST_AVATARS.elena,
-    depositStatus: "Deposit Paid",
-    depositAmount: 85,
-    totalPrice: 340,
-    status: "IN_SESSION",
-    dateStr: "Thursday, Oct 24",
-    notes: "Requires custom ice-champagne toner. Prefers sparkling lavender tea upon arrival."
+    serviceName: "Layer Cut & Blowout Styling",
+    station: "Styling Station Chair 1",
+    stylistName: "Niya",
+    stylistAvatar: STYLIST_AVATARS.niya,
+    status: "IN_PROGRESS",
+    dateStr: getRelativeDateStr(0),
+    notes: "Special thanks to Niya; requested soft face-framing layer cut with airy blowout."
   },
   {
     id: "apt-2",
     time: "11:30 AM",
-    durationMin: 90,
-    clientName: "Julian Moreau",
-    clientPhone: "(323) 555-0144",
-    clientInitials: "MT",
+    durationMin: 60,
+    clientName: "Ruby Khan",
+    clientPhone: "+91 94461 88203",
+    clientEmail: "ruby.khan@outlook.com",
+    clientInitials: "RK",
     clientTier: "VIP Gold",
-    serviceName: "Botanical Scalp Spa & Steam",
-    station: "Aromatherapy Pod 3",
-    stylistName: "Marcus Thorne",
-    stylistAvatar: STYLIST_AVATARS.marcus,
-    depositStatus: "Deposit Paid",
-    depositAmount: 45,
-    totalPrice: 240,
-    status: "CONFIRMED",
-    dateStr: "Thursday, Oct 24",
-    notes: "High scalp sensitivity; use biodynamic eucalyptus clay exfoliant."
+    serviceName: "Hair Spa & Relaxing Pedicure",
+    station: "Zen Spa & Pedicure Lounge",
+    stylistName: "Sunita",
+    stylistAvatar: STYLIST_AVATARS.sunita,
+    status: "BOOKED",
+    dateStr: getRelativeDateStr(0),
+    notes: "Loves Sunita's work; requested deep relaxing scalp pressure and eyebrow styling."
   },
   {
     id: "apt-3",
     time: "02:00 PM",
     durationMin: 60,
-    clientName: "Anya Rostova",
-    clientPhone: "(415) 309-8874",
-    clientInitials: "AR",
+    clientName: "Shalima Shamsudeen",
+    clientPhone: "+91 97455 12098",
+    clientEmail: "shalima.s@gmail.com",
+    clientInitials: "SS",
     clientTier: "VIP Gold",
-    serviceName: "Couture Cut & Velvet Blowout",
-    station: "Styling Station Chair 4",
-    stylistName: "Sora Takahashi",
-    stylistAvatar: STYLIST_AVATARS.sora,
-    depositStatus: "Deposit Paid",
-    depositAmount: 50,
-    totalPrice: 180,
-    status: "CONFIRMED",
-    dateStr: "Thursday, Oct 24",
-    notes: "Attending evening premiere; extra hold velvet spray."
+    serviceName: "Signature X Glow & HydraFacial",
+    station: "Aesthetic Skin Clinic Suite",
+    stylistName: "Abhirami",
+    stylistAvatar: STYLIST_AVATARS.abhirami,
+    status: "BOOKED",
+    dateStr: getRelativeDateStr(0),
+    notes: "Welcomed by manager Abhirami; requested hydrating soothing serums."
   },
   {
     id: "apt-4",
     time: "04:30 PM",
-    durationMin: 120,
-    clientName: "Sienna King",
-    clientPhone: "(650) 802-9912",
-    clientInitials: "SK",
+    durationMin: 60,
+    clientName: "Benazir TP",
+    clientPhone: "+91 95678 34912",
+    clientInitials: "BT",
     clientTier: "New Guest",
-    serviceName: "Full Architectural Blonding",
-    station: "Styling Station Chair 2",
-    stylistName: "Elena Vance",
-    stylistAvatar: STYLIST_AVATARS.elena,
-    depositStatus: "Pending Deposit",
-    depositAmount: 0,
-    totalPrice: 380,
-    status: "PENDING",
-    dateStr: "Thursday, Oct 24",
-    notes: "First time at atelier; thorough consultation needed."
+    serviceName: "Luxury Spa Manicure & Pedicure",
+    station: "Nail Atelier Suite",
+    stylistName: "Vismaya",
+    stylistAvatar: STYLIST_AVATARS.vismaya,
+    status: "BOOKED",
+    dateStr: getRelativeDateStr(0),
+    notes: "First time at StyleX Tirur; attentive nail and foot reflexology requested."
   },
   {
     id: "apt-5",
-    time: "05:45 PM",
+    time: "11:00 AM",
     durationMin: 45,
-    clientName: "Marcus Sterling",
-    clientPhone: "(310) 902-4411",
-    clientInitials: "MS",
+    clientName: "Dr. Rahul Menon",
+    clientPhone: "+91 98950 44211",
+    clientEmail: "dr.rahul.menon@kims.health",
+    clientInitials: "RM",
     clientTier: "VIP Member",
-    serviceName: "Silk Press & Scalp Care",
-    station: "Executive Station Chair 1",
-    stylistName: "Chloe Dupont",
-    stylistAvatar: STYLIST_AVATARS.chloe,
-    depositStatus: "Deposit Paid",
-    depositAmount: 60,
-    totalPrice: 210,
-    status: "CONFIRMED",
-    dateStr: "Thursday, Oct 24",
-    notes: "Requires deep hydrating bio-lipid mask."
+    serviceName: "Men's Precision Cut & Beard Sculpting",
+    station: "Master Barber Chair 1",
+    stylistName: "Saneesh",
+    stylistAvatar: STYLIST_AVATARS.saneesh,
+    status: "BOOKED",
+    dateStr: getRelativeDateStr(1),
+    notes: "Beard alignment with cooling mint oil head massage."
+  },
+  {
+    id: "apt-6",
+    time: "02:30 PM",
+    durationMin: 120,
+    clientName: "Afna Fathima",
+    clientPhone: "+91 96331 55904",
+    clientInitials: "AF",
+    clientTier: "VIP Platinum",
+    serviceName: "French Balayage & Brazilian Botox",
+    station: "Master Color Suite",
+    stylistName: "Niya",
+    stylistAvatar: STYLIST_AVATARS.niya,
+    status: "BOOKED",
+    dateStr: getRelativeDateStr(1),
+    notes: "Manager Abhirami coordinated customized tone; seamless caramel balayage."
+  },
+  {
+    id: "apt-9",
+    time: "05:00 PM",
+    durationMin: 90,
+    clientName: "Ananya Krishna",
+    clientPhone: "+91 98471 90223",
+    clientInitials: "AK",
+    clientTier: "VIP Gold",
+    serviceName: "Gents Hair Texture (Botox / Keratin)",
+    station: "Master Color Suite",
+    stylistName: "Niya",
+    stylistAvatar: STYLIST_AVATARS.niya,
+    status: "BOOKED",
+    dateStr: getRelativeDateStr(1),
+    notes: "Deep conditioning with heat seal realignment."
+  },
+  {
+    id: "apt-8",
+    time: "12:15 PM",
+    durationMin: 45,
+    clientName: "Kavya Nair",
+    clientPhone: "+91 98462 19044",
+    clientInitials: "KN",
+    clientTier: "New Guest",
+    serviceName: "Signature Facial Ritual",
+    station: "Zen Spa & Pedicure Lounge",
+    stylistName: "Sunita",
+    stylistAvatar: STYLIST_AVATARS.sunita,
+    status: "BOOKED",
+    dateStr: getRelativeDateStr(2),
+    notes: "Herbal steam and face lymphatic massage."
+  },
+  {
+    id: "apt-10",
+    time: "03:30 PM",
+    durationMin: 45,
+    clientName: "Faisal Rahman",
+    clientPhone: "+91 97450 67123",
+    clientInitials: "FR",
+    clientTier: "VIP Member",
+    serviceName: "Men's Precision Cut & Beard Sculpting",
+    station: "Master Barber Chair 2",
+    stylistName: "Saneesh",
+    stylistAvatar: STYLIST_AVATARS.saneesh,
+    status: "BOOKED",
+    dateStr: getRelativeDateStr(2),
+    notes: "Regular client; prefers matte wax styling."
+  },
+  {
+    id: "apt-11",
+    time: "04:00 PM",
+    durationMin: 60,
+    clientName: "Meera Nambiar",
+    clientPhone: "+91 96562 33419",
+    clientInitials: "MN",
+    clientTier: "VIP Platinum",
+    serviceName: "Signature X Glow & HydraFacial",
+    station: "Aesthetic Skin Clinic Suite",
+    stylistName: "Abhirami",
+    stylistAvatar: STYLIST_AVATARS.abhirami,
+    status: "BOOKED",
+    dateStr: getRelativeDateStr(3),
+    notes: "Bridal prep skincare ritual."
+  },
+  {
+    id: "apt-7",
+    time: "09:00 AM",
+    durationMin: 35,
+    clientName: "Mohammed Fayis",
+    clientPhone: "+91 97440 88124",
+    clientInitials: "MF",
+    clientTier: "VIP Member",
+    serviceName: "Gents Hair Cut & Beard Styling",
+    station: "Master Barber Chair 2",
+    stylistName: "Saneesh",
+    stylistAvatar: STYLIST_AVATARS.saneesh,
+    status: "COMPLETED",
+    dateStr: getRelativeDateStr(-1),
+    notes: "Morning walk-in service completed smoothly."
   }
 ];
 
 export const INITIAL_SERVICES: ServiceItem[] = [
+  // Gents
   {
-    id: "svc-1",
-    name: "Nordic Gloss Balayage & Tonal Glaze",
+    id: "svc-gents-1",
+    name: "Gents Hair Cut & Beard Styling",
     category: "hair",
-    durationMin: 120,
-    price: 340,
-    description: "Hand-painted French balayage blending with custom ash or mocha dimensions.",
+    durationMin: 35,
+    description: "Precision adult cut, beard trimming, razor detailing, and hot towel finish.",
     showOnWebsite: true
   },
   {
-    id: "svc-2",
-    name: "Botanical Cellular Scalp Spa & Steam",
-    category: "spa",
-    durationMin: 90,
-    price: 240,
-    description: "Sensory biodynamic clay exfoliation and jade comb stimulation under negative-ion steam.",
-    showOnWebsite: true
-  },
-  {
-    id: "svc-3",
-    name: "Couture Cut & Velvet Blowout",
-    category: "hair",
-    durationMin: 60,
-    price: 180,
-    description: "Customized bone-structure framing cut perfected for natural movement and airy silhouette.",
-    showOnWebsite: true
-  },
-  {
-    id: "svc-4",
-    name: "Botanical Silk Press & Keratin Glaze",
-    category: "hair",
-    durationMin: 75,
-    price: 210,
-    description: "Thermal realignment with bio-lipid protective infusion for mirror shine and humidity defense.",
-    showOnWebsite: true
-  },
-  {
-    id: "svc-5",
-    name: "High-Definition Gloss & Velvet Finish",
+    id: "svc-gents-2",
+    name: "Gents Hair Spa & Anti-Dandruff Care",
     category: "hair",
     durationMin: 45,
-    price: 140,
-    description: "Translucent color-refresh gloss therapy that cancels brassiness and seals cuticles.",
+    description: "Therapeutic L'Oreal scalp scrub, deep conditioning steam, and relaxing neck massage.",
+    showOnWebsite: true
+  },
+  {
+    id: "svc-gents-3",
+    name: "Gents Hair Texture (Botox / Keratin)",
+    category: "hair",
+    durationMin: 90,
+    description: "Frizz-free smoothening, botox, keratin, and nano plastia thermal realignment.",
+    showOnWebsite: true
+  },
+  {
+    id: "svc-gents-4",
+    name: "Gents Global INOA & Majirel Color",
+    category: "hair",
+    durationMin: 45,
+    description: "Ammonia-free INOA coverage, grey camouflage, and streak highlights.",
+    showOnWebsite: true
+  },
+  {
+    id: "svc-gents-5",
+    name: "Gents Signature X Glow & HydraFacial",
+    category: "skin",
+    durationMin: 60,
+    description: "Clinical vortex deep cleansing, 24K gold infusion, and instant brightening glow.",
+    showOnWebsite: true
+  },
+  {
+    id: "svc-gents-6",
+    name: "Gents Pre-Grooming Wedding Package",
+    category: "groom",
+    durationMin: 120,
+    description: "Whitening Miracle facial, de-tan, hair spa, precision cut, beard styling, and pedicure.",
+    showOnWebsite: true
+  },
+
+  // Ladies
+  {
+    id: "svc-ladies-1",
+    name: "Ladies Hair Cut & Blowout Styling",
+    category: "hair",
+    durationMin: 45,
+    description: "Bespoke layer cuts, bob cuts, curtain bangs, wash, and thermal blowout.",
+    showOnWebsite: true
+  },
+  {
+    id: "svc-ladies-2",
+    name: "Ladies Balayage & Artistic Highlights",
+    category: "hair",
+    durationMin: 150,
+    description: "Freehand French balayage, ombre melting, and gloss toner seal with Olaplex bond care.",
+    showOnWebsite: true
+  },
+  {
+    id: "svc-ladies-3",
+    name: "Ladies Keratin & Brazilian Botox",
+    category: "hair",
+    durationMin: 120,
+    description: "Intensive cuticle repair, diamond gloss smoothing, and long-lasting frizz protection.",
+    showOnWebsite: true
+  },
+  {
+    id: "svc-ladies-4",
+    name: "Ladies Hair Spa & Intensive Therapy",
+    category: "hair",
+    durationMin: 60,
+    description: "Targeted anti-dandruff therapy, deep scalp scrub, and nourishing oil massage.",
+    showOnWebsite: true
+  },
+  {
+    id: "svc-ladies-5",
+    name: "Ladies Signature X Glow & HydraFacial MD",
+    category: "skin",
+    durationMin: 60,
+    description: "HydraFacial vortex exfoliation, 24K gold facial, and luminous bridal glow.",
+    showOnWebsite: true
+  },
+  {
+    id: "svc-ladies-6",
+    name: "Ladies Spa Manicure & Pedicure Lounge",
+    category: "spa",
+    durationMin: 60,
+    description: "Exfoliating foot soak, nail shaping, gel polish, and soothing reflexology massage.",
+    showOnWebsite: true
+  },
+  {
+    id: "svc-ladies-7",
+    name: "Ladies Pre-Bridal Luxury Package",
+    category: "bridal",
+    durationMin: 180,
+    description: "Bridal facial with de-tan, full body waxing, advanced mani-pedi, and hair spa ritual.",
     showOnWebsite: true
   }
 ];
@@ -173,109 +358,109 @@ export const INITIAL_WEEK_SCHEDULE: DaySchedule[] = [
   {
     dayName: "Monday",
     label: "Monday",
-    dateStr: "Mon, Oct 28",
-    isOpen: false,
-    statusText: "Closed",
-    subText: "Scalp Lab sanitation",
-    hours: "Closed for Walk-ins & Public Bookings"
+    dateStr: "Mon, Daily",
+    isOpen: true,
+    statusText: "Open",
+    subText: "10:00 AM – 1:00 AM",
+    hours: "10:00 AM – 1:00 AM"
   },
   {
     dayName: "Tuesday",
     label: "Tuesday",
-    dateStr: "Tue, Oct 29",
+    dateStr: "Tue, Daily",
     isOpen: true,
     statusText: "Open",
-    subText: "Standard public hours",
-    hours: "9:00 AM – 8:00 PM"
+    subText: "10:00 AM – 1:00 AM",
+    hours: "10:00 AM – 1:00 AM"
   },
   {
     dayName: "Wednesday",
     label: "Wednesday",
-    dateStr: "Wed, Oct 30",
+    dateStr: "Wed, Daily",
     isOpen: true,
     statusText: "Open",
-    subText: "Standard public hours",
-    hours: "9:00 AM – 8:00 PM"
+    subText: "10:00 AM – 1:00 AM",
+    hours: "10:00 AM – 1:00 AM"
   },
   {
     dayName: "Thursday",
     label: "Today",
-    dateStr: "Thu, Oct 24",
+    dateStr: "Thu, Daily",
     isOpen: true,
     statusText: "Open",
-    subText: "2 public slots remaining",
-    hours: "9:00 AM – 8:00 PM"
+    subText: "10:00 AM – 1:00 AM",
+    hours: "10:00 AM – 1:00 AM"
   },
   {
     dayName: "Friday",
     label: "Tomorrow",
-    dateStr: "Fri, Oct 25",
-    isOpen: false,
-    statusText: "Blackout",
-    subText: "VIP Private Gala buyout",
-    hours: "Closed (VIP Gala Buyout)"
+    dateStr: "Fri, Weekend",
+    isOpen: true,
+    statusText: "Open",
+    subText: "10:00 AM – 1:00 AM",
+    hours: "10:00 AM – 1:00 AM"
   },
   {
     dayName: "Saturday",
-    label: "Weekend",
-    dateStr: "Sat, Oct 26",
+    label: "Saturday",
+    dateStr: "Sat, Weekend",
     isOpen: true,
     statusText: "Open",
-    subText: "14 slots open (9:00 AM – 7:30 PM)",
-    hours: "9:00 AM – 7:00 PM"
+    subText: "10:00 AM – 1:00 AM",
+    hours: "10:00 AM – 1:00 AM"
   },
   {
     dayName: "Sunday",
     label: "Sunday",
-    dateStr: "Sun, Oct 27",
+    dateStr: "Sun, Weekend",
     isOpen: true,
     statusText: "Open",
-    subText: "10:00 AM – 4:00 PM",
-    hours: "10:00 AM – 5:00 PM"
+    subText: "10:00 AM – 1:00 AM",
+    hours: "10:00 AM – 1:00 AM"
   }
 ];
 
 export const INITIAL_BLACKOUT_DATES: BlackoutDate[] = [
   {
     id: "bo-1",
-    month: "OCT",
-    day: "25",
-    title: "VIP Private Gala Buyout",
-    timeRange: "All Day",
-    description: "Private floor event; public reservations closed."
+    month: "NOV",
+    day: "14",
+    title: "VIP Private Bridal Suite Buyout",
+    timeRange: "10:00 AM – 3:00 PM",
+    description: "Private bridal party makeover; public bookings reserved for main salon."
   },
   {
     id: "bo-2",
-    month: "NOV",
-    day: "04",
-    title: "Stylist Masterclass & Purge",
-    timeRange: "9:00 AM – 1:00 PM",
-    description: "Morning session closed. Reopening at 1:15 PM."
+    month: "DEC",
+    day: "01",
+    title: "Artisan Masterclass & Equipment Calibration",
+    timeRange: "8:00 AM – 10:00 AM",
+    description: "Morning staff training session. Public doors open at 10:00 AM as scheduled."
   }
 ];
 
 export const INITIAL_PROMO_CODES: PromoCode[] = [
   {
     id: "promo-1",
-    code: "STYLEXFIRST",
-    discount: "15% off first salon ritual",
-    totalUses: "48 / 100 uses",
+    code: "STYLEXTIRUR",
+    discount: "Complimentary Hair Spa Add-on",
+    totalUses: "84 / 150 uses",
     isActive: true,
     colorScheme: "green"
   },
   {
     id: "promo-2",
-    code: "VIPSANCTUARY",
-    discount: "Complimentary Valet & Scalp Treatment",
-    totalUses: "112 uses",
+    code: "BRIDALGLOW",
+    discount: "Complimentary HydraFacial Trial with Pre-Bridal Suite",
+    totalUses: "26 uses",
     isActive: true,
     colorScheme: "yellow"
   },
   {
     id: "promo-3",
-    code: "AUTUMNGLOW",
-    discount: "$30 Off Glossing & Blowout Duo",
-    totalUses: "63 / 75 uses",
+    code: "HAIRSPAFEST",
+    discount: "Complimentary Scalp Scrub Add-on",
+    totalUses: "112 / 200 uses",
     isActive: true,
     colorScheme: "orange"
   }
@@ -284,9 +469,26 @@ export const INITIAL_PROMO_CODES: PromoCode[] = [
 export const INITIAL_BANNERS: CarouselBanner[] = [
   {
     id: "ban-1",
-    title: "Hair Spa & Anti-Dandruff Treatment",
-    validity: "Oct 15, 2024 – Nov 30, 2024",
-    imageUrl: PROMO_BANNER_URL,
+    title: "Signature Hair Spa & Anti-Dandruff Ritual",
+    tag: "Limited Privilege",
+    validity: "Open Daily • 10:00 AM – 1:00 AM",
+    imageUrl: "/images/photos/smoothening.jpg",
+    isActive: true
+  },
+  {
+    id: "ban-2",
+    title: "French Balayage & Brazilian Botox Suite",
+    tag: "Color Curation",
+    validity: "StyleX Tirur Outlet Exclusive",
+    imageUrl: "/images/photos/coloring.jpg",
+    isActive: true
+  },
+  {
+    id: "ban-3",
+    title: "Pre-Bridal Luxury & Wedding Makeover",
+    tag: "Bridal Packages",
+    validity: "Private VIP Suite Reservations",
+    imageUrl: "/images/photos/bridal.jpg",
     isActive: true
   }
 ];
@@ -294,54 +496,68 @@ export const INITIAL_BANNERS: CarouselBanner[] = [
 export const INITIAL_STYLISTS: Stylist[] = [
   {
     id: "stylist-1",
-    name: "Elena Vance",
-    role: "Atelier Master & Founder",
-    avatar: STYLIST_AVATARS.elena,
-    station: "Private Suite 1 & Chair 2",
-    specialty: "Nordic Blonding, Balayage, Precision Color",
+    name: "Niya",
+    role: "Senior Stylist & Hair Care Specialist",
+    avatar: STYLIST_AVATARS.niya,
+    station: "Styling Station Chair 1",
     appointmentsCount: 6,
     rating: 5.0,
-    reviewsCount: 148,
-    bio: "Over 14 years curating architectural cuts and bespoke blonding for Los Angeles and European clientele.",
+    reviewsCount: 164,
     isAvailableToday: true
   },
   {
     id: "stylist-2",
-    name: "Marcus Thorne",
-    role: "Senior Scalp & Texture Specialist",
-    avatar: STYLIST_AVATARS.marcus,
-    station: "Zen Aromatherapy Pod 3",
-    specialty: "Cellular Scalp Spa, Steam Rituals, Japanese Trichology",
-    appointmentsCount: 4,
-    rating: 4.9,
-    reviewsCount: 92,
-    bio: "Certified trichologist focused on scalp health restoration and sensory meditative steam therapies.",
+    name: "Abhirami",
+    role: "Salon Manager & Client Care Lead",
+    avatar: STYLIST_AVATARS.abhirami,
+    station: "Executive Consultation Desk",
+    appointmentsCount: 5,
+    rating: 5.0,
+    reviewsCount: 182,
     isAvailableToday: true
   },
   {
     id: "stylist-3",
-    name: "Sora Takahashi",
-    role: "Creative Editorial Stylist",
-    avatar: STYLIST_AVATARS.sora,
-    station: "Styling Station Chair 4",
-    specialty: "Couture Cuts, Geometric Framing, Velvet Blowouts",
-    appointmentsCount: 5,
+    name: "Saneesh",
+    role: "Master Barber & Men's Grooming Lead",
+    avatar: STYLIST_AVATARS.saneesh,
+    station: "Master Barber Chair 1",
+    appointmentsCount: 7,
     rating: 4.9,
-    reviewsCount: 110,
-    bio: "Paris Fashion Week collaborator specializing in feather-light layering and dimensional curtain fringes.",
+    reviewsCount: 140,
     isAvailableToday: true
   },
   {
     id: "stylist-4",
-    name: "Chloe Dupont",
-    role: "Thermal & Hair Health Artisan",
-    avatar: STYLIST_AVATARS.chloe,
-    station: "Executive Station Chair 1",
-    specialty: "Botanical Silk Press, Keratin Glazes, Curl Restoration",
-    appointmentsCount: 3,
-    rating: 4.8,
-    reviewsCount: 76,
-    bio: "Master of non-damaging thermal smoothing rituals and custom humidity-resistant protein infusions.",
+    name: "Sunita",
+    role: "Senior Spa & Pedicure Specialist",
+    avatar: STYLIST_AVATARS.sunita,
+    station: "Zen Spa & Pedicure Lounge",
+    appointmentsCount: 4,
+    rating: 5.0,
+    reviewsCount: 118,
+    isAvailableToday: true
+  },
+  {
+    id: "stylist-5",
+    name: "Vismaya",
+    role: "Nail Artisan & Foot Care Specialist",
+    avatar: STYLIST_AVATARS.vismaya,
+    station: "Nail Atelier Suite",
+    appointmentsCount: 5,
+    rating: 4.9,
+    reviewsCount: 96,
+    isAvailableToday: true
+  },
+  {
+    id: "stylist-6",
+    name: "Neha",
+    role: "Senior Hair & Texture Artisan",
+    avatar: STYLIST_AVATARS.neha,
+    station: "Styling Station Chair 2",
+    appointmentsCount: 4,
+    rating: 4.9,
+    reviewsCount: 88,
     isAvailableToday: true
   }
 ];
@@ -349,101 +565,159 @@ export const INITIAL_STYLISTS: Stylist[] = [
 export const INITIAL_VIP_CLIENTS: VIPClient[] = [
   {
     id: "client-1",
-    name: "Camille Vance",
-    initials: "CV",
-    phone: "+1 (310) 849-2201",
-    email: "camille.vance@studio.com",
+    name: "Athira P",
+    initials: "AP",
+    phone: "+91 98470 23145",
+    email: "athira.p@gmail.com",
     tier: "VIP Platinum",
-    preferredStylist: "Elena Vance",
-    totalVisits: 24,
-    favoriteRitual: "Nordic Gloss Balayage & Glaze",
-    notes: "Prefers silent service during color processing. Sparkling lavender water.",
-    lastVisit: "2 weeks ago"
+    preferredStylist: "Niya",
+    totalVisits: 14,
+    favoriteRitual: "Layer Cut & Blowout Styling",
+    notes: "Special thanks to Niya; appreciates smart advice and comfortable atmosphere.",
+    lastVisit: "1 week ago"
   },
   {
     id: "client-2",
-    name: "Julian Moreau",
-    initials: "JM",
-    phone: "+1 (323) 555-0144",
-    email: "jmoreau@designfirm.com",
+    name: "Ruby Khan",
+    initials: "RK",
+    phone: "+91 94461 88203",
+    email: "ruby.khan@outlook.com",
     tier: "VIP Gold",
-    preferredStylist: "Marcus Thorne",
-    totalVisits: 16,
-    favoriteRitual: "Botanical Cellular Scalp Spa & Steam",
-    notes: "Always books Aromatherapy Pod 3 for Tuesday morning sessions.",
-    lastVisit: "1 month ago"
-  },
-  {
-    id: "client-3",
-    name: "Anya Rostova",
-    initials: "AR",
-    phone: "+1 (415) 309-8874",
-    email: "anya.rostova@gallery.org",
-    tier: "VIP Gold",
-    preferredStylist: "Sora Takahashi",
-    totalVisits: 19,
-    favoriteRitual: "Couture Cut & Velvet Blowout",
-    notes: "Needs 45 min before red carpet events; likes light champagne spritz.",
+    preferredStylist: "Sunita",
+    totalVisits: 12,
+    favoriteRitual: "Hair Spa & Relaxing Pedicure",
+    notes: "Hardworking specialist Sunita is requested every visit. Loves relaxing head massage.",
     lastVisit: "3 weeks ago"
   },
   {
+    id: "client-3",
+    name: "Shalima Shamsudeen",
+    initials: "SS",
+    phone: "+91 97455 12098",
+    email: "shalima.s@gmail.com",
+    tier: "VIP Gold",
+    preferredStylist: "Abhirami",
+    totalVisits: 18,
+    favoriteRitual: "Signature X Glow & HydraFacial",
+    notes: "Commends warm and welcoming hospitality from Abhirami, Niya, and Neha.",
+    lastVisit: "2 weeks ago"
+  },
+  {
     id: "client-4",
-    name: "Marcus Sterling",
-    initials: "MS",
-    phone: "+1 (310) 902-4411",
-    email: "msterling@beverlywealth.com",
+    name: "Benazir TP",
+    initials: "BT",
+    phone: "+91 95678 34912",
+    email: "benazir.tp@gmail.com",
     tier: "VIP Member",
-    preferredStylist: "Chloe Dupont",
-    totalVisits: 9,
-    favoriteRitual: "Silk Press & Scalp Care",
-    notes: "Requests 24h reminder via WhatsApp and valet parking spot #2.",
-    lastVisit: "2 months ago"
+    preferredStylist: "Vismaya",
+    totalVisits: 8,
+    favoriteRitual: "Luxury Spa Manicure & Pedicure",
+    notes: "Praised Abhirami and Vismaya for attentive, professional manicure & pedicure care.",
+    lastVisit: "1 month ago"
+  },
+  {
+    id: "client-5",
+    name: "Dr. Rahul Menon",
+    initials: "RM",
+    phone: "+91 98950 44211",
+    email: "rahul.menon@kims.health",
+    tier: "VIP Member",
+    preferredStylist: "Saneesh",
+    totalVisits: 11,
+    favoriteRitual: "Men's Precision Cut & Beard Sculpting",
+    notes: "Usually books late evening slots post-8:00 PM; prefers mint oil cooling massage.",
+    lastVisit: "2 weeks ago"
+  },
+  {
+    id: "client-6",
+    name: "Afna Fathima",
+    initials: "AF",
+    phone: "+91 96331 55904",
+    email: "afna.fathima@gmail.com",
+    tier: "VIP Platinum",
+    preferredStylist: "Saneesh",
+    totalVisits: 15,
+    favoriteRitual: "French Balayage & Brazilian Botox",
+    notes: "Praises hairdresser Saneesh and manager Abhirami for incredible transformation care.",
+    lastVisit: "10 days ago"
   }
 ];
 
 export const INITIAL_CONCIERGE_INQUIRIES: ConciergeInquiry[] = [
   {
     id: "inq-1",
-    clientName: "Lady Genevieve Clark",
+    clientName: "Fatima Zahra",
     clientTier: "VIP Platinum",
-    phone: "+1 (310) 555-8821",
-    serviceRequested: "Private Suite Buyout for Bridal Party",
-    preferredDate: "Nov 16, 2024 (Full Afternoon)",
-    message: "Seeking complete atelier closure for 6 guests with champagne service and bespoke styling for our destination gala.",
+    phone: "+91 98471 22990",
+    serviceRequested: "VIP Bridal Suite Booking for 5 Guests",
+    preferredDate: "Next Saturday (Full Afternoon)",
+    message: "Seeking private suite reservation for our family wedding group. Requires HydraFacial, hair spa, and bridal styling with Abhirami coordinating.",
     status: "Unread",
-    timeAgo: "18m ago"
+    timeAgo: "15m ago"
   },
   {
     id: "inq-2",
-    clientName: "Dr. Alistair Finch",
+    clientName: "Shameer K",
     clientTier: "VIP Gold",
-    phone: "+1 (212) 555-4309",
-    serviceRequested: "Botanical Scalp Spa + Express Cut",
-    preferredDate: "Friday, Oct 25 (Post 6 PM)",
-    message: "Flying in from New York. Wondering if Marcus Thorne has an off-hours slot available due to the gala blackout.",
+    phone: "+91 97450 88123",
+    serviceRequested: "Late Night Haircut & Beard Grooming",
+    preferredDate: "Tonight (11:30 PM)",
+    message: "Arriving from Calicut Airport around 11:15 PM. Can Saneesh take an express haircut and beard styling session before 1:00 AM closing?",
     status: "Unread",
-    timeAgo: "1h ago"
+    timeAgo: "45m ago"
   },
   {
     id: "inq-3",
-    clientName: "Valerie Dubois",
+    clientName: "Anjali Nair",
     clientTier: "VIP Member",
-    phone: "+1 (310) 555-9034",
-    serviceRequested: "Nordic Blonding Consultation",
-    preferredDate: "Saturday, Oct 26 @ 11 AM",
-    message: "Have previous brassy tones from another salon. Elena was highly recommended by Camille Vance.",
+    phone: "+91 96330 44556",
+    serviceRequested: "Brazilian Botox & Hair Smoothening",
+    preferredDate: "Sunday @ 2:00 PM",
+    message: "Had frizzy hair concerns from previous treatments elsewhere. Recommended by Athira P to consult Niya regarding Keratin or Brazilian Botox.",
     status: "In Progress",
-    timeAgo: "3h ago"
+    timeAgo: "2h ago"
   }
 ];
 
 export const INITIAL_SETTINGS: SalonSettings = {
   salonName: "StyleX Signature Salon",
-  phone: "+1 (555) 781-2539",
-  email: "concierge@stylexatelier.com",
-  address: "450 N Canon Dr, Suite 100, Beverly Hills, CA 90210",
-  requireOnlineDeposit: true,
+  phone: "+91 96561 11149",
+  email: "concierge@stylexsalon.in",
+  address: "One Arcade, Near Lenskart, KG Padi Rd, Tirur, Kerala 676101",
   reschedulePolicy24h: true,
   smsWhatsappReminders: true,
-  emailCalendarInvites: true
+  emailCalendarInvites: true,
+  darkMode: false,
+  whatsappBotConnected: false,
+  whatsappBotPhone: "+91 96561 11149",
 };
+
+export const INITIAL_STYLIST_LEAVES: StylistLeave[] = [
+  {
+    id: "leave-1",
+    stylistId: "stylist-1",
+    stylistName: "Niya",
+    date: "2024-10-28",
+    duration: "FULL_DAY",
+    reason: "Advanced Masterclass & L'Oreal Paris Academy Training",
+    createdAt: "2024-10-24"
+  },
+  {
+    id: "leave-2",
+    stylistId: "stylist-4",
+    stylistName: "Sunita",
+    date: "2024-10-29",
+    duration: "FIRST_HALF",
+    reason: "Personal morning appointment (Returns after 4:30 PM)",
+    createdAt: "2024-10-24"
+  },
+  {
+    id: "leave-3",
+    stylistId: "stylist-3",
+    stylistName: "Saneesh",
+    date: "2024-11-02",
+    duration: "SECOND_HALF",
+    reason: "Family function (Available morning 10 AM – 4:30 PM)",
+    createdAt: "2024-10-24"
+  }
+];

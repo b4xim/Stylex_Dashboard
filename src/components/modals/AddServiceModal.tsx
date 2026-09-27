@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ServiceItem } from '../../types';
+import { ServiceItem, ServiceCategory } from '../../types';
 
 interface AddServiceModalProps {
   isOpen: boolean;
@@ -15,9 +15,8 @@ export const AddServiceModal: React.FC<AddServiceModalProps> = ({
   serviceToEdit,
 }) => {
   const [name, setName] = useState('');
-  const [category, setCategory] = useState<'hair' | 'spa'>('hair');
-  const [durationMin, setDurationMin] = useState(60);
-  const [price, setPrice] = useState(180);
+  const [category, setCategory] = useState<ServiceCategory>('hair');
+  const [durationMin, setDurationMin] = useState(45);
   const [description, setDescription] = useState('');
   const [showOnWebsite, setShowOnWebsite] = useState(true);
 
@@ -26,14 +25,12 @@ export const AddServiceModal: React.FC<AddServiceModalProps> = ({
       setName(serviceToEdit.name);
       setCategory(serviceToEdit.category);
       setDurationMin(serviceToEdit.durationMin);
-      setPrice(serviceToEdit.price);
       setDescription(serviceToEdit.description);
       setShowOnWebsite(serviceToEdit.showOnWebsite);
     } else {
       setName('');
       setCategory('hair');
-      setDurationMin(60);
-      setPrice(180);
+      setDurationMin(45);
       setDescription('');
       setShowOnWebsite(true);
     }
@@ -50,7 +47,6 @@ export const AddServiceModal: React.FC<AddServiceModalProps> = ({
       name: name.trim(),
       category,
       durationMin: Number(durationMin),
-      price: Number(price),
       description: description.trim(),
       showOnWebsite,
     };
@@ -69,7 +65,7 @@ export const AddServiceModal: React.FC<AddServiceModalProps> = ({
             </div>
             <div>
               <span className="text-[11px] text-[#9b4521] uppercase tracking-wider font-bold">
-                Atelier Service Catalog
+                Admin Service Catalog
               </span>
               <h3 className="font-serif text-2xl text-[#112e20]">
                 {serviceToEdit ? 'Edit Service' : 'Add New Service'}
@@ -93,7 +89,7 @@ export const AddServiceModal: React.FC<AddServiceModalProps> = ({
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Nordic Gloss Balayage & Glaze"
+              placeholder="e.g. Hair Cut & Blowout Styling"
               className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
             />
           </div>
@@ -105,11 +101,14 @@ export const AddServiceModal: React.FC<AddServiceModalProps> = ({
               </label>
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value as 'hair' | 'spa')}
+                onChange={(e) => setCategory(e.target.value as ServiceCategory)}
                 className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
               >
                 <option value="hair">Hair Design</option>
-                <option value="spa">Spa & Wellness</option>
+                <option value="skin">Skin Care & Glow</option>
+                <option value="spa">Spa & Nails</option>
+                <option value="groom">Pre-Grooming</option>
+                <option value="bridal">Pre-Bridal</option>
               </select>
             </div>
             <div>
@@ -125,20 +124,6 @@ export const AddServiceModal: React.FC<AddServiceModalProps> = ({
                 className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
               />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-[#181d1b] mb-1">
-              Base Price ($ USD)
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="5"
-              value={price}
-              onChange={(e) => setPrice(Number(e.target.value))}
-              className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
-            />
           </div>
 
           <div>

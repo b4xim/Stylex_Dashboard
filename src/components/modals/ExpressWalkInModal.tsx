@@ -50,18 +50,15 @@ export const ExpressWalkInModal: React.FC<ExpressWalkInModalProps> = ({
       time: timeStr,
       durationMin: selectedService?.durationMin || 45,
       clientName: clientName.trim(),
-      clientPhone: clientPhone.trim() || '+1 (310) 555-WALK',
+      clientPhone: clientPhone.trim() || '+91 96561 11149',
       clientInitials: initials,
       clientTier: 'New Guest',
       serviceName: selectedService ? selectedService.name : 'Express Styling Ritual',
-      station: selectedStylist ? selectedStylist.station : 'Walk-in Station 1',
-      stylistName: selectedStylist ? selectedStylist.name : 'Elena Vance',
+      station: selectedStylist ? selectedStylist.station : 'Styling Station Chair 1',
+      stylistName: selectedStylist ? selectedStylist.name : 'Niya',
       stylistAvatar: selectedStylist ? selectedStylist.avatar : '',
-      depositStatus: 'Complimentary',
-      depositAmount: 0,
-      totalPrice: selectedService ? selectedService.price : 180,
-      status: 'IN_SESSION',
-      dateStr: 'Thursday, Oct 24',
+      status: 'IN_PROGRESS',
+      dateStr: 'Today',
       notes: 'Express Walk-in guest seated immediately.',
     };
 
@@ -102,7 +99,7 @@ export const ExpressWalkInModal: React.FC<ExpressWalkInModalProps> = ({
               autoFocus
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
-              placeholder="e.g. Victoria Sterling"
+              placeholder="e.g. Athira P"
               className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
             />
           </div>
@@ -114,7 +111,7 @@ export const ExpressWalkInModal: React.FC<ExpressWalkInModalProps> = ({
             <input
               value={clientPhone}
               onChange={(e) => setClientPhone(e.target.value)}
-              placeholder="+1 (310) 555-0199"
+              placeholder="+91 98470 12345"
               className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
             />
           </div>
@@ -130,7 +127,7 @@ export const ExpressWalkInModal: React.FC<ExpressWalkInModalProps> = ({
             >
               {services.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.name} (${s.price} • {s.durationMin}m)
+                  {s.name} ({s.durationMin} mins)
                 </option>
               ))}
             </select>
@@ -155,7 +152,7 @@ export const ExpressWalkInModal: React.FC<ExpressWalkInModalProps> = ({
 
           <div className="p-3 rounded-lg bg-[#eaefeb] text-xs text-[#424844] flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px] text-[#112e20]">info</span>
-            <span>Will be seated immediately in session with no deposit required.</span>
+            <span>Will be seated immediately in session at assigned station.</span>
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-2">

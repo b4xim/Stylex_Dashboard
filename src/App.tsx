@@ -1,28 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   NavTab,
   Appointment,
   ServiceItem,
   DaySchedule,
   BlackoutDate,
-  PromoCode,
   CarouselBanner,
   Stylist,
   VIPClient,
   ConciergeInquiry,
   SalonSettings,
+  StylistLeave,
+  UserAccount,
+  SystemRole,
 } from './types';
 import {
   INITIAL_APPOINTMENTS,
   INITIAL_SERVICES,
   INITIAL_WEEK_SCHEDULE,
   INITIAL_BLACKOUT_DATES,
-  INITIAL_PROMO_CODES,
   INITIAL_BANNERS,
   INITIAL_STYLISTS,
   INITIAL_VIP_CLIENTS,
   INITIAL_CONCIERGE_INQUIRIES,
   INITIAL_SETTINGS,
+  INITIAL_STYLIST_LEAVES,
+  INITIAL_USERS,
+  getRelativeDateStr,
 } from './mockData';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
@@ -37,62 +41,110 @@ import { ClientsView } from './components/ClientsView';
 import { ConciergeView } from './components/ConciergeView';
 import { SettingsView } from './components/SettingsView';
 import { AdminSignIn } from './components/AdminSignIn';
+import { ChangePasswordModal } from './components/ChangePasswordModal';
+import { UserModal } from './components/modals/UserModal';
 
-// Modals
 import { NewBookingModal } from './components/modals/NewBookingModal';
 import { ExpressWalkInModal } from './components/modals/ExpressWalkInModal';
-import { CheckoutModal } from './components/modals/CheckoutModal';
 import { AddServiceModal } from './components/modals/AddServiceModal';
 import { AddBlackoutModal } from './components/modals/AddBlackoutModal';
 import { AddPromotionModal } from './components/modals/AddPromotionModal';
 import { RunSheetModal } from './components/modals/RunSheetModal';
+import { ManageBookingModal } from './components/modals/ManageBookingModal';
+import { ScheduleStylistLeaveModal } from './components/modals/ScheduleStylistLeaveModal';
+import { StylistModal } from './components/modals/StylistModal';
 
 export default function App() {
   // Navigation & Authentication
   const [currentTab, setCurrentTab] = useState<NavTab>('overview');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
 
-  // Core Data
+  // User Accounts & Authentication (Dynamic Staff Directory)
+  const [users, setUsers] = useState<UserAccount[]>(() => {
+    const saved = localStorage.getItem('stylex_user_accounts_v1');
+    return saved ? JSON.parse(saved) : INITIAL_USERS;
+  });
+
+  const [currentUser, setCurrentUser] = useState<UserAccount>(() => {
+    const savedUsers: UserAccount[] = (() => {
+      const saved = localStorage.getItem('stylex_user_accounts_v1');
+      return saved ? JSON.parse(saved) : INITIAL_USERS;
+    })();
+    const savedEmail = localStorage.getItem('stylex_current_user_email_v1');
+    const matched = savedUsers.find((u) => u.email.toLowerCase() === (savedEmail || '').toLowerCase());
+    return matched || savedUsers[0] || INITIAL_USERS[0];
+  });
+
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState<boolean>(false);
+  const [isUserModalOpen, setIsUserModalOpen] = useState<boolean>(false);
+  const [userToEdit, setUserToEdit] = useState<UserAccount | null>(null);
+
+  // Sync users to localStorage
+  useEffect(() => {
+    localStorage.setItem('stylex_user_accounts_v1', JSON.stringify(users));
+  }, [users]);
+
+  // Keep currentUser in sync if updated in users list
+  useEffect(() => {
+    const updated = users.find((u) => u.id === currentUser.id);
+    if (updated) {
+      setCurrentUser(updated);
+    }
+  }, [users]);
+
+  // Core Data (with Tirur Flagship data keys)
   const [appointments, setAppointments] = useState<Appointment[]>(() => {
-    const saved = localStorage.getItem('stylex_appointments');
+    const saved = localStorage.getItem('stylex_tirur_v7_appointments');
     return saved ? JSON.parse(saved) : INITIAL_APPOINTMENTS;
   });
 
   const [services, setServices] = useState<ServiceItem[]>(() => {
-    const saved = localStorage.getItem('stylex_services');
+    const saved = localStorage.getItem('stylex_tirur_v6_services');
     return saved ? JSON.parse(saved) : INITIAL_SERVICES;
   });
 
   const [weekSchedule, setWeekSchedule] = useState<DaySchedule[]>(() => {
-    const saved = localStorage.getItem('stylex_schedule');
+    const saved = localStorage.getItem('stylex_tirur_v7_schedule');
     return saved ? JSON.parse(saved) : INITIAL_WEEK_SCHEDULE;
   });
 
   const [blackoutDates, setBlackoutDates] = useState<BlackoutDate[]>(() => {
-    const saved = localStorage.getItem('stylex_blackouts');
+    const saved = localStorage.getItem('stylex_tirur_v6_blackouts');
     return saved ? JSON.parse(saved) : INITIAL_BLACKOUT_DATES;
   });
 
-  const [promoCodes, setPromoCodes] = useState<PromoCode[]>(() => {
-    const saved = localStorage.getItem('stylex_promos');
-    return saved ? JSON.parse(saved) : INITIAL_PROMO_CODES;
-  });
-
   const [banners, setBanners] = useState<CarouselBanner[]>(() => {
-    const saved = localStorage.getItem('stylex_banners');
+    const saved = localStorage.getItem('stylex_tirur_v6_banners');
     return saved ? JSON.parse(saved) : INITIAL_BANNERS;
   });
 
-  const [stylists] = useState<Stylist[]>(INITIAL_STYLISTS);
-  const [clients] = useState<VIPClient[]>(INITIAL_VIP_CLIENTS);
+  const [stylists, setStylists] = useState<Stylist[]>(() => {
+    const saved = localStorage.getItem('stylex_tirur_v6_stylists');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.map((s: Stylist) => {
+          const { specialty: _spec, ...rest } = s;
+          return rest;
+        });
+      } catch (e) {}
+    }
+    return INITIAL_STYLISTS;
+  });
+  const [vipClients] = useState<VIPClient[]>(INITIAL_VIP_CLIENTS);
+
+  const [stylistLeaves, setStylistLeaves] = useState<StylistLeave[]>(() => {
+    const saved = localStorage.getItem('stylex_tirur_v6_stylist_leaves');
+    return saved ? JSON.parse(saved) : INITIAL_STYLIST_LEAVES;
+  });
 
   const [inquiries, setInquiries] = useState<ConciergeInquiry[]>(() => {
-    const saved = localStorage.getItem('stylex_inquiries');
+    const saved = localStorage.getItem('stylex_tirur_v6_inquiries');
     return saved ? JSON.parse(saved) : INITIAL_CONCIERGE_INQUIRIES;
   });
 
   const [settings, setSettings] = useState<SalonSettings>(() => {
-    const saved = localStorage.getItem('stylex_settings');
+    const saved = localStorage.getItem('stylex_tirur_v6_settings');
     return saved ? JSON.parse(saved) : INITIAL_SETTINGS;
   });
 
@@ -101,13 +153,19 @@ export default function App() {
 
   // Modals state
   const [isNewBookingOpen, setIsNewBookingOpen] = useState(false);
+  const [bookingInitialDate, setBookingInitialDate] = useState<string>('');
   const [isExpressWalkInOpen, setIsExpressWalkInOpen] = useState(false);
   const [isRunSheetOpen, setIsRunSheetOpen] = useState(false);
   const [isAddServiceOpen, setIsAddServiceOpen] = useState(false);
   const [serviceToEdit, setServiceToEdit] = useState<ServiceItem | null>(null);
   const [isAddBlackoutOpen, setIsAddBlackoutOpen] = useState(false);
   const [isAddPromotionOpen, setIsAddPromotionOpen] = useState(false);
-  const [checkoutAppointment, setCheckoutAppointment] = useState<Appointment | null>(null);
+  const [bannerToEdit, setBannerToEdit] = useState<CarouselBanner | null>(null);
+  const [managedAppointment, setManagedAppointment] = useState<Appointment | null>(null);
+  const [isScheduleLeaveOpen, setIsScheduleLeaveOpen] = useState(false);
+  const [leaveTargetStylistId, setLeaveTargetStylistId] = useState<string | undefined>(undefined);
+  const [isStylistModalOpen, setIsStylistModalOpen] = useState(false);
+  const [stylistToEdit, setStylistToEdit] = useState<Stylist | null>(null);
 
   // Toasts
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -126,68 +184,76 @@ export default function App() {
 
   // Sync state to localStorage
   useEffect(() => {
-    localStorage.setItem('stylex_appointments', JSON.stringify(appointments));
+    localStorage.setItem('stylex_tirur_v7_appointments', JSON.stringify(appointments));
   }, [appointments]);
 
   useEffect(() => {
-    localStorage.setItem('stylex_services', JSON.stringify(services));
+    localStorage.setItem('stylex_tirur_v6_services', JSON.stringify(services));
   }, [services]);
 
   useEffect(() => {
-    localStorage.setItem('stylex_schedule', JSON.stringify(weekSchedule));
+    localStorage.setItem('stylex_tirur_v7_schedule', JSON.stringify(weekSchedule));
   }, [weekSchedule]);
 
   useEffect(() => {
-    localStorage.setItem('stylex_blackouts', JSON.stringify(blackoutDates));
+    localStorage.setItem('stylex_tirur_v6_blackouts', JSON.stringify(blackoutDates));
   }, [blackoutDates]);
 
   useEffect(() => {
-    localStorage.setItem('stylex_promos', JSON.stringify(promoCodes));
-  }, [promoCodes]);
-
-  useEffect(() => {
-    localStorage.setItem('stylex_banners', JSON.stringify(banners));
+    localStorage.setItem('stylex_tirur_v6_banners', JSON.stringify(banners));
   }, [banners]);
 
   useEffect(() => {
-    localStorage.setItem('stylex_inquiries', JSON.stringify(inquiries));
+    localStorage.setItem('stylex_tirur_v6_stylist_leaves', JSON.stringify(stylistLeaves));
+    localStorage.setItem('stylex_stylist_leaves', JSON.stringify(stylistLeaves));
+  }, [stylistLeaves]);
+
+  useEffect(() => {
+    localStorage.setItem('stylex_tirur_v6_stylists', JSON.stringify(stylists));
+  }, [stylists]);
+
+  useEffect(() => {
+    localStorage.setItem('stylex_tirur_v6_inquiries', JSON.stringify(inquiries));
   }, [inquiries]);
 
   useEffect(() => {
-    localStorage.setItem('stylex_settings', JSON.stringify(settings));
+    localStorage.setItem('stylex_tirur_v6_settings', JSON.stringify(settings));
   }, [settings]);
+
+  useEffect(() => {
+    if (settings.darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [settings.darkMode]);
 
   // Operational Handlers
   const handleToggleEngine = () => {
-    setIsEngineActive((prev) => {
-      const next = !prev;
-      addToast(
-        next ? 'success' : 'info',
-        next ? 'Guest Booking Engine Activated' : 'Public Reservations Blackout Enacted',
-        next ? 'Public web portal is now accepting appointments.' : 'Public booking gateway is paused.'
-      );
-      return next;
-    });
+    const next = !isEngineActive;
+    setIsEngineActive(next);
+    addToast(
+      next ? 'success' : 'info',
+      next ? 'Guest Booking Engine Activated' : 'Public Reservations Paused',
+      next ? 'Public web portal is now accepting appointments.' : 'Public booking gateway is paused.'
+    );
   };
 
   const handleToggleDaySchedule = (index: number) => {
+    const targetDay = weekSchedule[index];
+    if (!targetDay) return;
+    const nextOpen = !targetDay.isOpen;
     setWeekSchedule((prev) =>
-      prev.map((day, idx) => {
-        if (idx === index) {
-          const nextOpen = !day.isOpen;
-          addToast(
-            'info',
-            `${day.dateStr} Availability Changed`,
-            nextOpen ? 'Public booking slots open.' : 'Day marked closed/blackout.'
-          );
-          return {
-            ...day,
-            isOpen: nextOpen,
-            statusText: nextOpen ? 'Open' : 'Closed',
-          };
-        }
-        return day;
-      })
+      prev.map((day, idx) =>
+        idx === index
+          ? { ...day, isOpen: nextOpen, statusText: nextOpen ? 'Open' : 'Closed' }
+          : day
+      )
+    );
+    addToast(
+      'info',
+      `${targetDay.dateStr} Availability Changed`,
+      nextOpen ? 'Public booking slots open.' : 'Day marked closed/blackout.'
     );
   };
 
@@ -211,13 +277,13 @@ export default function App() {
 
   const handleCheckIn = (aptId: string) => {
     setAppointments((prev) =>
-      prev.map((a) => (a.id === aptId ? { ...a, status: 'IN_SESSION' as const } : a))
+      prev.map((a) => (a.id === aptId ? { ...a, status: 'IN_PROGRESS' as const } : a))
     );
     const apt = appointments.find((a) => a.id === aptId);
     addToast(
       'success',
-      'Guest Checked In',
-      `${apt?.clientName || 'Guest'} marked In Session at ${apt?.station || 'station'}.`
+      'Guest In Progress',
+      `${apt?.clientName || 'Guest'} marked In Progress at ${apt?.station || 'station'}.`
     );
   };
 
@@ -233,42 +299,136 @@ export default function App() {
   const handleSendLink = (apt: Appointment) => {
     addToast(
       'success',
-      'Payment Link Dispatched',
-      `Sent deposit invoice link ($95.00) via SMS to ${apt.clientPhone}.`
+      'Appointment Reminder Sent',
+      `Sent appointment confirmation & directions via SMS to ${apt.clientPhone}.`
     );
   };
 
-  const handleCompleteCheckout = (aptId: string, tipAmount: number, paymentMethod: string) => {
+  const handleCompleteSession = (aptId: string) => {
     setAppointments((prev) =>
       prev.map((a) =>
         a.id === aptId
-          ? { ...a, status: 'COMPLETED' as const, depositStatus: 'Full Paid' as const }
+          ? { ...a, status: 'COMPLETED' as const }
           : a
       )
     );
     const apt = appointments.find((a) => a.id === aptId);
     addToast(
       'success',
-      'Reception Checkout Complete',
-      `Payment settled for ${apt?.clientName} via ${paymentMethod} ($${tipAmount} tip included).`
+      'Session Finished',
+      `Ritual completed for ${apt?.clientName || 'guest'}. Station is now ready.`
     );
+  };
+
+  const handleUpdateBooking = (updated: Appointment) => {
+    setAppointments((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+    addToast(
+      'success',
+      'Booking Updated',
+      `Reservation for ${updated.clientName} updated successfully.`
+    );
+  };
+
+  const handleCancelBooking = (aptId: string, reason?: string) => {
+    setAppointments((prev) =>
+      prev.map((a) => {
+        if (a.id === aptId) {
+          const notesAppend = reason ? `${a.notes ? a.notes + ' | ' : ''}Cancellation Reason: ${reason}` : a.notes;
+          return { ...a, status: 'CANCELLED' as const, notes: notesAppend };
+        }
+        return a;
+      })
+    );
+    const target = appointments.find((a) => a.id === aptId);
+    addToast(
+      'info',
+      'Booking Cancelled',
+      `Reservation for ${target?.clientName || 'guest'} has been cancelled.`
+    );
+  };
+
+  const handleDeleteBooking = (aptId: string) => {
+    const target = appointments.find((a) => a.id === aptId);
+    setAppointments((prev) => prev.filter((a) => a.id !== aptId));
+    addToast(
+      'info',
+      'Booking Removed',
+      `Record for ${target?.clientName || 'guest'} permanently deleted from registry.`
+    );
+  };
+
+  // Stylist Leave Handlers
+  const handleOpenScheduleLeave = (stylistId?: string) => {
+    setLeaveTargetStylistId(stylistId);
+    setIsScheduleLeaveOpen(true);
+  };
+
+  const handleAddStylistLeave = (newLeave: StylistLeave) => {
+    setStylistLeaves((prev) => [newLeave, ...prev]);
+    const durationLabel =
+      newLeave.duration === 'FULL_DAY'
+        ? 'Full Day Off'
+        : newLeave.duration === 'FIRST_HALF'
+        ? 'Half Day (Morning: 10 AM – 4:30 PM)'
+        : 'Half Day (Evening: 4:30 PM – 1 AM)';
+    addToast(
+      'info',
+      'Stylist Leave Scheduled',
+      `${newLeave.stylistName} scheduled off on ${newLeave.date} (${durationLabel}).`
+    );
+  };
+
+  const handleDeleteStylistLeave = (leaveId: string) => {
+    const target = stylistLeaves.find((l) => l.id === leaveId);
+    setStylistLeaves((prev) => prev.filter((l) => l.id !== leaveId));
+    addToast(
+      'info',
+      'Stylist Leave Revoked',
+      `Leave for ${target?.stylistName || 'stylist'} revoked. Stylist restored to active roster.`
+    );
+  };
+
+  // Stylist CRUD Handlers
+  const handleOpenAddStylist = () => {
+    setStylistToEdit(null);
+    setIsStylistModalOpen(true);
+  };
+
+  const handleOpenEditStylist = (stylist: Stylist) => {
+    setStylistToEdit(stylist);
+    setIsStylistModalOpen(true);
+  };
+
+  const handleSaveStylist = (updated: Stylist) => {
+    setStylists((prev) => {
+      const exists = prev.find((s) => s.id === updated.id);
+      if (exists) {
+        addToast('success', 'Stylist Updated', `${updated.name}'s profile has been saved.`);
+        return prev.map((s) => (s.id === updated.id ? updated : s));
+      }
+      addToast('success', 'Stylist Added', `${updated.name} has been added to the team.`);
+      return [updated, ...prev];
+    });
+  };
+
+  const handleDeleteStylist = (id: string) => {
+    const target = stylists.find((s) => s.id === id);
+    setStylists((prev) => prev.filter((s) => s.id !== id));
+    addToast('info', 'Stylist Removed', `${target?.name || 'Stylist'} removed from the roster.`);
   };
 
   // Service Menu Handlers
   const handleToggleServiceVisibility = (id: string) => {
+    const target = services.find((s) => s.id === id);
+    if (!target) return;
+    const next = !target.showOnWebsite;
     setServices((prev) =>
-      prev.map((s) => {
-        if (s.id === id) {
-          const next = !s.showOnWebsite;
-          addToast(
-            'info',
-            'Service Visibility Updated',
-            `"${s.name}" is now ${next ? 'visible on' : 'hidden from'} client website.`
-          );
-          return { ...s, showOnWebsite: next };
-        }
-        return s;
-      })
+      prev.map((s) => (s.id === id ? { ...s, showOnWebsite: next } : s))
+    );
+    addToast(
+      'info',
+      'Service Visibility Updated',
+      `"${target.name}" is now ${next ? 'visible on' : 'hidden from'} client website.`
     );
   };
 
@@ -300,16 +460,19 @@ export default function App() {
   // Blackout Date Handlers
   const handleAddBlackout = (item: BlackoutDate) => {
     setBlackoutDates((prev) => [item, ...prev]);
+    const isSlots = item.blockType === 'TIME_SLOTS' && item.slots && item.slots.length > 0;
     addToast(
       'info',
-      'Blackout Date Scheduled',
-      `${item.title} on ${item.month} ${item.day} registered.`
+      isSlots ? 'Time Slot(s) Blocked' : 'Date Blocked',
+      isSlots
+        ? `${item.slots!.length} 1-hour slot(s) blocked on ${item.month} ${item.day}`
+        : `Full day closure registered on ${item.month} ${item.day}`
     );
   };
 
   const handleDeleteBlackout = (id: string) => {
     setBlackoutDates((prev) => prev.filter((b) => b.id !== id));
-    addToast('info', 'Blackout Removed', 'Atelier schedule returned to standard hours.');
+    addToast('info', 'Blackout Removed', 'Outlet schedule returned to standard hours.');
   };
 
   // Promotions Handlers
@@ -320,21 +483,20 @@ export default function App() {
     addToast('info', 'Banner Updated', 'Homepage carousel banner display updated.');
   };
 
-  const handleTogglePromo = (id: string) => {
-    setPromoCodes((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p))
-    );
-    addToast('info', 'Promo Code Updated', 'Client discount code status toggled.');
+  const handleSaveBanner = (banner: CarouselBanner) => {
+    setBanners((prev) => {
+      const exists = prev.some((b) => b.id === banner.id);
+      if (exists) {
+        return prev.map((b) => (b.id === banner.id ? banner : b));
+      }
+      return [banner, ...prev];
+    });
+    addToast('success', 'Promotion Slide Saved', `"${banner.title}" saved.`);
   };
 
-  const handleAddPromoCode = (code: PromoCode) => {
-    setPromoCodes((prev) => [code, ...prev]);
-    addToast('success', 'Promo Code Created', `Code ${code.code} is now active.`);
-  };
-
-  const handleAddBanner = (banner: CarouselBanner) => {
-    setBanners((prev) => [banner, ...prev]);
-    addToast('success', 'Banner Campaign Created', `"${banner.title}" added to carousel.`);
+  const handleDeleteBanner = (id: string) => {
+    setBanners((prev) => prev.filter((b) => b.id !== id));
+    addToast('info', 'Slide Removed', 'Carousel promotion slide removed.');
   };
 
   // Concierge Handlers
@@ -359,18 +521,87 @@ export default function App() {
   // Settings Handlers
   const handleSaveSettings = (newSettings: SalonSettings) => {
     setSettings(newSettings);
-    addToast('success', 'Atelier Settings Saved', 'Salon profile, deposits & notification rules updated.');
+    addToast('success', 'Salon Settings Saved', 'Salon profile and notification policies updated.');
+  };
+
+  const handleToggleDarkMode = (enabled: boolean) => {
+    setSettings((prev) => ({ ...prev, darkMode: enabled }));
+    addToast(
+      'info',
+      enabled ? 'Dark Theme Activated' : 'Light Theme Activated',
+      enabled ? 'Switched to midnight atelier dark mode.' : 'Switched to signature botanical light mode.'
+    );
+  };
+
+  // User Management Handlers
+  const handleAddUser = () => {
+    setUserToEdit(null);
+    setIsUserModalOpen(true);
+  };
+
+  const handleEditUser = (user: UserAccount) => {
+    setUserToEdit(user);
+    setIsUserModalOpen(true);
+  };
+
+  const handleSaveUser = (userPayload: UserAccount): { success: boolean; message?: string } => {
+    const exists = users.some((u) => u.id === userPayload.id);
+    if (exists) {
+      setUsers((prev) => prev.map((u) => (u.id === userPayload.id ? userPayload : u)));
+      addToast('success', 'User Updated', `Account for ${userPayload.name} updated successfully.`);
+    } else {
+      setUsers((prev) => [...prev, userPayload]);
+      addToast('success', 'User Created', `Staff account for ${userPayload.name} (${userPayload.role}) created.`);
+    }
+    return { success: true };
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    const target = users.find((u) => u.id === userId);
+    if (!target) return;
+    if (target.email === 'admin@stylexsalon.in') {
+      addToast('error', 'Action Denied', 'The default administrator account cannot be deleted.');
+      return;
+    }
+    if (target.id === currentUser.id) {
+      addToast('error', 'Action Denied', 'You cannot delete your own active account.');
+      return;
+    }
+    setUsers((prev) => prev.filter((u) => u.id !== userId));
+    addToast('info', 'User Removed', `Account for ${target.name} has been deleted.`);
+  };
+
+  // Change Password Handler for active user
+  const handleUpdatePassword = (oldPass: string, newPass: string) => {
+    if (oldPass !== currentUser.password) {
+      return { success: false, message: 'Current password does not match.' };
+    }
+    const updatedUser = { ...currentUser, password: newPass };
+    setCurrentUser(updatedUser);
+    setUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
+    addToast(
+      'success',
+      'Password Updated',
+      `Credentials updated successfully for ${currentUser.name}.`
+    );
+    return { success: true, message: 'Password updated successfully.' };
   };
 
   // Login & Logout
   const handleLogout = () => {
     setIsAuthenticated(false);
-    addToast('info', 'Signed Out', 'You have been signed out from the atelier command portal.');
+    addToast('info', 'Signed Out', `Signed out of ${currentUser.name} account.`);
   };
 
-  const handleSignInSuccess = () => {
+  const handleSignInSuccess = (user: UserAccount) => {
+    setCurrentUser(user);
+    localStorage.setItem('stylex_current_user_email_v1', user.email);
     setIsAuthenticated(true);
-    addToast('success', 'Welcome Back', 'Elena Vance authenticated as Atelier Master & Admin.');
+    addToast(
+      'success',
+      `Welcome, ${user.name}`,
+      `Authenticated as ${user.roleTitle} (${user.email}).`
+    );
   };
 
   // If user signed out, display Admin Sign In screen
@@ -378,12 +609,25 @@ export default function App() {
     return (
       <>
         <ToastContainer toasts={toasts} onDismiss={removeToast} />
-        <AdminSignIn onSignInSuccess={handleSignInSuccess} />
+        <AdminSignIn
+          onSignInSuccess={handleSignInSuccess}
+          users={users}
+        />
       </>
     );
   }
 
   const unreadInquiriesCount = inquiries.filter((i) => i.status === 'Unread').length;
+
+  // Dynamic count of today's appointments for sidebar badge
+  const todayAppointmentsCount = useMemo(() => {
+    const todayYMD = getRelativeDateStr(0);
+    return appointments.filter((apt) => {
+      if (!apt.dateStr) return false;
+      const normalized = apt.dateStr.toLowerCase() === 'today' ? todayYMD : apt.dateStr;
+      return normalized === todayYMD;
+    }).length;
+  }, [appointments]);
 
   return (
     <div className="bg-[#f6faf7] font-body-md text-[#181d1b] antialiased min-h-screen">
@@ -397,7 +641,7 @@ export default function App() {
           setCurrentTab(tab);
           setGlobalSearchQuery('');
         }}
-        todayAppointmentsCount={18}
+        todayAppointmentsCount={todayAppointmentsCount}
         unreadConciergeCount={unreadInquiriesCount}
         onLogout={handleLogout}
       />
@@ -408,8 +652,13 @@ export default function App() {
           onOpenNewBooking={() => setIsNewBookingOpen(true)}
           searchQuery={globalSearchQuery}
           onSearchChange={setGlobalSearchQuery}
-          onProfileClick={() => setCurrentTab('atelier-settings')}
+          currentUser={currentUser}
+          onNavigateToSettings={() => setCurrentTab('atelier-settings')}
+          onOpenChangePassword={() => setIsChangePasswordOpen(true)}
+          onLogout={handleLogout}
           unreadCount={unreadInquiriesCount}
+          darkMode={settings.darkMode}
+          onToggleDarkMode={() => handleToggleDarkMode(!settings.darkMode)}
         />
 
         <main className="relative pt-20 bg-[#f6faf7] min-h-screen px-6 sm:px-8 py-8">
@@ -423,11 +672,12 @@ export default function App() {
               onOpenExpressWalkIn={() => setIsExpressWalkInOpen(true)}
               onOpenRunSheet={() => setIsRunSheetOpen(true)}
               onOpenAddBlackout={() => setIsAddBlackoutOpen(true)}
-              onCheckout={(apt) => setCheckoutAppointment(apt)}
+              onCompleteSession={handleCompleteSession}
               onCheckIn={handleCheckIn}
               onPrepare={handlePrepare}
               onSendLink={handleSendLink}
               onToggleDaySchedule={handleToggleDaySchedule}
+              onManageBooking={(apt) => setManagedAppointment(apt)}
               globalSearchQuery={globalSearchQuery}
             />
           )}
@@ -435,9 +685,13 @@ export default function App() {
           {currentTab === 'appointments' && (
             <AppointmentsView
               appointments={appointments}
-              onOpenNewBooking={() => setIsNewBookingOpen(true)}
-              onCheckout={(apt) => setCheckoutAppointment(apt)}
+              onOpenNewBooking={(targetDate?: string) => {
+                setBookingInitialDate(targetDate || new Date().toISOString().split('T')[0]);
+                setIsNewBookingOpen(true);
+              }}
+              onCompleteSession={handleCompleteSession}
               onCheckIn={handleCheckIn}
+              onManageBooking={(apt) => setManagedAppointment(apt)}
               globalSearchQuery={globalSearchQuery}
             />
           )}
@@ -447,19 +701,28 @@ export default function App() {
               weekSchedule={weekSchedule}
               blackoutDates={blackoutDates}
               isEngineActive={isEngineActive}
+              stylistLeaves={stylistLeaves}
               onToggleEngine={handleToggleEngine}
               onToggleDay={handleToggleDaySchedule}
               onOpenAddBlackout={() => setIsAddBlackoutOpen(true)}
               onDeleteBlackout={handleDeleteBlackout}
+              onOpenScheduleLeave={() => handleOpenScheduleLeave()}
+              onDeleteLeave={handleDeleteStylistLeave}
             />
           )}
 
           {currentTab === 'artisans-and-stylists' && (
             <ArtisansView
               stylists={stylists}
+              stylistLeaves={stylistLeaves}
               onOpenNewBookingWithStylist={(stylistId) => {
                 setIsNewBookingOpen(true);
               }}
+              onOpenScheduleLeave={handleOpenScheduleLeave}
+              onDeleteLeave={handleDeleteStylistLeave}
+              onAddStylist={handleOpenAddStylist}
+              onEditStylist={handleOpenEditStylist}
+              onDeleteStylist={handleDeleteStylist}
               globalSearchQuery={globalSearchQuery}
             />
           )}
@@ -484,16 +747,22 @@ export default function App() {
           {currentTab === 'promotions' && (
             <PromotionsView
               banners={banners}
-              promoCodes={promoCodes}
               onToggleBanner={handleToggleBanner}
-              onTogglePromo={handleTogglePromo}
-              onOpenAddPromotion={() => setIsAddPromotionOpen(true)}
+              onEditBanner={(banner) => {
+                setBannerToEdit(banner);
+                setIsAddPromotionOpen(true);
+              }}
+              onDeleteBanner={handleDeleteBanner}
+              onOpenAddPromotion={() => {
+                setBannerToEdit(null);
+                setIsAddPromotionOpen(true);
+              }}
             />
           )}
 
           {currentTab === 'clients-and-vip' && (
             <ClientsView
-              clients={clients}
+              clients={vipClients}
               onBookClient={(name, phone) => {
                 setIsNewBookingOpen(true);
               }}
@@ -514,6 +783,12 @@ export default function App() {
             <SettingsView
               settings={settings}
               onSave={handleSaveSettings}
+              onToggleDarkMode={handleToggleDarkMode}
+              users={users}
+              currentUser={currentUser}
+              onAddUser={handleAddUser}
+              onEditUser={handleEditUser}
+              onDeleteUser={handleDeleteUser}
             />
           )}
         </main>
@@ -525,7 +800,10 @@ export default function App() {
         onClose={() => setIsNewBookingOpen(false)}
         services={services}
         stylists={stylists}
+        stylistLeaves={stylistLeaves}
+        blackoutDates={blackoutDates}
         onAddBooking={handleAddBooking}
+        initialDate={bookingInitialDate}
       />
 
       <ExpressWalkInModal
@@ -534,12 +812,6 @@ export default function App() {
         services={services}
         stylists={stylists}
         onAddWalkIn={handleAddWalkIn}
-      />
-
-      <CheckoutModal
-        appointment={checkoutAppointment}
-        onClose={() => setCheckoutAppointment(null)}
-        onCompleteCheckout={handleCompleteCheckout}
       />
 
       <AddServiceModal
@@ -560,9 +832,12 @@ export default function App() {
 
       <AddPromotionModal
         isOpen={isAddPromotionOpen}
-        onClose={() => setIsAddPromotionOpen(false)}
-        onAddPromoCode={handleAddPromoCode}
-        onAddBanner={handleAddBanner}
+        onClose={() => {
+          setIsAddPromotionOpen(false);
+          setBannerToEdit(null);
+        }}
+        onSaveBanner={handleSaveBanner}
+        bannerToEdit={bannerToEdit}
       />
 
       <RunSheetModal
@@ -570,6 +845,54 @@ export default function App() {
         onClose={() => setIsRunSheetOpen(false)}
         appointments={appointments}
         dateStr="Thursday, Oct 24, 2024"
+      />
+
+      <ManageBookingModal
+        isOpen={!!managedAppointment}
+        appointment={managedAppointment}
+        stylists={stylists}
+        stylistLeaves={stylistLeaves}
+        onClose={() => setManagedAppointment(null)}
+        onUpdateBooking={handleUpdateBooking}
+        onCancelBooking={handleCancelBooking}
+        onDeleteBooking={handleDeleteBooking}
+      />
+
+      <ScheduleStylistLeaveModal
+        isOpen={isScheduleLeaveOpen}
+        onClose={() => {
+          setIsScheduleLeaveOpen(false);
+          setLeaveTargetStylistId(undefined);
+        }}
+        stylists={stylists}
+        initialStylistId={leaveTargetStylistId}
+        appointments={appointments}
+        onAddLeave={handleAddStylistLeave}
+      />
+
+      <StylistModal
+        isOpen={isStylistModalOpen}
+        stylist={stylistToEdit}
+        onClose={() => { setIsStylistModalOpen(false); setStylistToEdit(null); }}
+        onSave={handleSaveStylist}
+      />
+
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+        currentUser={currentUser}
+        onUpdatePassword={handleUpdatePassword}
+      />
+
+      <UserModal
+        isOpen={isUserModalOpen}
+        user={userToEdit}
+        onClose={() => {
+          setIsUserModalOpen(false);
+          setUserToEdit(null);
+        }}
+        onSave={handleSaveUser}
+        existingEmails={users.map((u) => u.email)}
       />
     </div>
   );

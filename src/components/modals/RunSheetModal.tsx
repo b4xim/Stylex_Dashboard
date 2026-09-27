@@ -29,7 +29,7 @@ export const RunSheetModal: React.FC<RunSheetModalProps> = ({
             <img src={LOGO_URL} alt="StyleX" className="h-8 w-auto object-contain" />
             <div>
               <span className="text-[11px] text-[#9b4521] uppercase tracking-wider font-bold">
-                Atelier Reception Run Sheet
+                Admin Reception Run Sheet
               </span>
               <h3 className="font-serif text-2xl text-[#112e20]">Daily Manifest • {dateStr}</h3>
             </div>
@@ -60,7 +60,7 @@ export const RunSheetModal: React.FC<RunSheetModalProps> = ({
                 <th className="py-3 px-4">Client</th>
                 <th className="py-3 px-4">Service & Ritual</th>
                 <th className="py-3 px-4">Stylist & Station</th>
-                <th className="py-3 px-4">Payment</th>
+                <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4">Notes</th>
               </tr>
             </thead>
@@ -81,8 +81,16 @@ export const RunSheetModal: React.FC<RunSheetModalProps> = ({
                     <span className="text-[10px] text-[#727973]">{apt.station}</span>
                   </td>
                   <td className="py-3 px-4">
-                    <span className="font-semibold text-emerald-800 block">
-                      ${apt.totalPrice} ({apt.depositStatus})
+                    <span className={`font-semibold px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider ${
+                      apt.status === 'CANCELLED'
+                        ? 'bg-[#ffdad6] text-[#ba1a1a]'
+                        : apt.status === 'IN_PROGRESS'
+                        ? 'bg-[#9b4521] text-white'
+                        : apt.status === 'COMPLETED'
+                        ? 'bg-[#e5e9e6] text-[#112e20]'
+                        : 'bg-[#caead5] text-[#042014]'
+                    }`}>
+                      {apt.status === 'CANCELLED' ? 'Cancelled' : apt.status === 'IN_PROGRESS' ? 'In Progress' : apt.status === 'COMPLETED' ? 'Completed' : 'Booked'}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-[#424844] italic max-w-xs truncate">
@@ -95,7 +103,7 @@ export const RunSheetModal: React.FC<RunSheetModalProps> = ({
         </div>
 
         <div className="mt-4 flex items-center justify-between text-xs text-[#727973] pt-2 border-t border-[#eaefeb]">
-          <span>StyleX Signature Salon • Beverly Hills Atelier</span>
+          <span>StyleX Signature Salon • Tirur Outlet</span>
           <span>Verified Run Sheet Manifest • Station Sync Active</span>
         </div>
       </div>

@@ -1,209 +1,340 @@
-import React, { useState } from 'react';
-import { PromoCode, CarouselBanner } from '../../types';
+import React, { useState, useEffect, useRef } from 'react';
+import { CarouselBanner } from '../../types';
 
 interface AddPromotionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddPromoCode: (promo: PromoCode) => void;
-  onAddBanner: (banner: CarouselBanner) => void;
+  onSaveBanner: (banner: CarouselBanner) => void;
+  bannerToEdit?: CarouselBanner | null;
 }
 
 export const AddPromotionModal: React.FC<AddPromotionModalProps> = ({
   isOpen,
   onClose,
-  onAddPromoCode,
-  onAddBanner,
+  onSaveBanner,
+  bannerToEdit,
 }) => {
-  const [promoType, setPromoType] = useState<'code' | 'banner'>('code');
-  const [code, setCode] = useState('');
-  const [discount, setDiscount] = useState('');
-  const [usageLimit, setUsageLimit] = useState('100');
-  const [colorScheme, setColorScheme] = useState<'green' | 'yellow' | 'orange'>('green');
+  const [title, setTitle] = useState('');
+  const [tag, setTag] = useState('Limited Privilege');
+  const [validity, setValidity] = useState('Open Daily • 10:00 AM – 1:00 AM');
+  const [imageUrl, setImageUrl] = useState('');
+  const [isActive, setIsActive] = useState(true);
+  const [imageFileName, setImageFileName] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
-  // Banner fields
-  const [bannerTitle, setBannerTitle] = useState('');
-  const [bannerValidity, setBannerValidity] = useState('Nov 01, 2024 – Dec 15, 2024');
-  const [bannerUrl, setBannerUrl] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (bannerToEdit) {
+      setTitle(bannerToEdit.title || '');
+      setTag(bannerToEdit.tag || 'Limited Privilege');
+      setValidity(bannerToEdit.validity || 'Open Daily • 10:00 AM – 1:00 AM');
+      setImageUrl(bannerToEdit.imageUrl || '');
+      setIsActive(bannerToEdit.isActive ?? true);
+      setImageFileName('');
+      setUploadError('');
+    } else {
+      setTitle('');
+      setTag('Limited Privilege');
+      setValidity('Open Daily • 10:00 AM – 1:00 AM');
+      setImageUrl('');
+      setIsActive(true);
+      setImageFileName('');
+      setUploadError('');
+    }
+  }, [bannerToEdit, isOpen]);
 
   if (!isOpen) return null;
 
+  const handleProcessFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select a valid image file (PNG, JPG, WebP).');
+      return;
+    }
+    setUploadError('');
+    setImageFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setImageUrl(e.target.result as string);
+      }
+    };
+    reader.onerror = () => {
+      setUploadError('Failed to read image file. Please try another image.');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleProcessFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleProcessFile(file);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (promoType === 'code') {
-      if (!code.trim() || !discount.trim()) return;
-      onAddPromoCode({
-        id: `promo-${Date.now()}`,
-        code: code.trim().toUpperCase().replace(/\s+/g, ''),
-        discount: discount.trim(),
-        totalUses: `0 / ${usageLimit} uses`,
-        isActive: true,
-        colorScheme,
-      });
-    } else {
-      if (!bannerTitle.trim()) return;
-      onAddBanner({
-        id: `ban-${Date.now()}`,
-        title: bannerTitle.trim(),
-        validity: bannerValidity.trim(),
-        imageUrl: bannerUrl.trim() || 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=600&q=80',
-        isActive: true,
-      });
+    if (!title.trim()) return;
+    if (!imageUrl.trim()) {
+      setUploadError('Please upload a promotional image for this banner.');
+      return;
     }
+
+    onSaveBanner({
+      id: bannerToEdit?.id || `ban-${Date.now()}`,
+      title: title.trim(),
+      tag: tag.trim() || 'Featured Offer',
+      validity: validity.trim() || 'Seasonal Special',
+      imageUrl: imageUrl.trim(),
+      isActive,
+    });
     onClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#112e20]/60 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#c2c8c2]/50">
+      <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-[#c2c8c2]/50 max-h-[90vh] overflow-y-auto">
+        {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[#eaefeb]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#f0f5f1] text-[#112e20] flex items-center justify-center">
-              <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
+              <span className="material-symbols-outlined text-[20px]">
+                {bannerToEdit ? 'edit_note' : 'auto_awesome'}
+              </span>
             </div>
             <div>
               <span className="text-[11px] text-[#9b4521] uppercase tracking-wider font-bold">
-                Promotion Studio
+                Carousel Studio
               </span>
-              <h3 className="font-serif text-2xl text-[#112e20]">New Atelier Promotion</h3>
+              <h3 className="font-serif text-2xl text-[#112e20]">
+                {bannerToEdit ? 'Edit Carousel Promotion' : 'New Carousel Promotion'}
+              </h3>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-[#727973] hover:text-[#181d1b] rounded-full hover:bg-[#f0f5f1] transition-colors"
+            type="button"
+            className="p-1.5 text-[#727973] hover:text-[#181d1b] rounded-full hover:bg-[#f0f5f1] transition-colors cursor-pointer"
           >
             <span className="material-symbols-outlined text-[20px]">close</span>
           </button>
         </div>
 
-        {/* Tab switcher */}
-        <div className="flex p-1 bg-[#f0f5f1] rounded-lg mt-4 text-xs font-semibold">
-          <button
-            type="button"
-            onClick={() => setPromoType('code')}
-            className={`flex-1 py-1.5 rounded-md transition-all ${
-              promoType === 'code' ? 'bg-white text-[#112e20] shadow-xs' : 'text-[#424844]'
-            }`}
-          >
-            Client Promo Code
-          </button>
-          <button
-            type="button"
-            onClick={() => setPromoType('banner')}
-            className={`flex-1 py-1.5 rounded-md transition-all ${
-              promoType === 'banner' ? 'bg-white text-[#112e20] shadow-xs' : 'text-[#424844]'
-            }`}
-          >
-            Website Carousel Banner
-          </button>
-        </div>
+        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+          {/* Campaign Headline */}
+          <div>
+            <label className="block text-xs font-semibold text-[#181d1b] mb-1">
+              Promotion Campaign Headline <span className="text-[#9b4521]">*</span>
+            </label>
+            <input
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Signature Hair Spa & Anti-Dandruff Ritual"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none transition-all"
+            />
+          </div>
 
-        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          {promoType === 'code' ? (
-            <>
-              <div>
-                <label className="block text-xs font-semibold text-[#181d1b] mb-1">
-                  Promo Code Wordmark
-                </label>
-                <input
-                  required
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="e.g. LUXURY2024"
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm uppercase tracking-wider font-mono font-bold focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
-                />
-              </div>
+          {/* Privilege Tag & Validity in 2 cols */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-[#181d1b] mb-1">
+                Privilege Tag / Badge
+              </label>
+              <input
+                value={tag}
+                onChange={(e) => setTag(e.target.value)}
+                placeholder="e.g. Limited Privilege"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-[#181d1b] mb-1">
+                Validity / Timing
+              </label>
+              <input
+                value={validity}
+                onChange={(e) => setValidity(e.target.value)}
+                placeholder="e.g. Open Daily • 10:00 AM – 1:00 AM"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none transition-all"
+              />
+            </div>
+          </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-[#181d1b] mb-1">
-                  Discount Description
-                </label>
-                <input
-                  required
-                  value={discount}
-                  onChange={(e) => setDiscount(e.target.value)}
-                  placeholder="e.g. 20% off Balayage or Complimentary Scalp Steam"
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
-                />
-              </div>
+          {/* Image Upload Section (Instead of URL) */}
+          <div>
+            <label className="block text-xs font-semibold text-[#181d1b] mb-1.5 flex items-center justify-between">
+              <span>
+                Promotion Banner Image <span className="text-[#9b4521]">*</span>
+              </span>
+              <span className="text-[11px] text-[#727973] font-normal">
+                Recommended 16:9 or 21:9 ratio
+              </span>
+            </label>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-[#181d1b] mb-1">Usage Limit</label>
-                  <input
-                    type="number"
-                    value={usageLimit}
-                    onChange={(e) => setUsageLimit(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
+            {/* Hidden File Input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+
+            {imageUrl ? (
+              /* Image Uploaded / Preview State */
+              <div className="rounded-xl border border-[#c2c8c2]/50 p-3 bg-[#f8faf8] flex flex-col gap-3">
+                <div className="relative rounded-lg overflow-hidden border border-[#c2c8c2]/30 aspect-[21/9] bg-[#0c2217] flex items-center justify-center group shadow-xs">
+                  <img
+                    src={imageUrl}
+                    alt={title || 'Promotion preview'}
+                    className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
                   />
+                  {tag && (
+                    <div className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-xs text-[#112e20] text-[10px] font-bold uppercase tracking-wider shadow-xs">
+                      {tag}
+                    </div>
+                  )}
+                  <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-white text-[10px]">
+                    Preview
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="material-symbols-outlined text-[18px] text-[#112e20]">
+                      check_circle
+                    </span>
+                    <span className="text-xs text-[#424844] truncate">
+                      {imageFileName || 'Uploaded Banner Image'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#112e20] text-white text-xs font-semibold hover:bg-[#284435] transition-colors cursor-pointer shadow-xs"
+                    >
+                      <span className="material-symbols-outlined text-[15px]">upload</span>
+                      <span>Change Image</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageUrl('');
+                        setImageFileName('');
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      className="w-8 h-8 rounded-xl border border-[#c2c8c2]/50 dark:border-white/10 bg-white dark:bg-white/5 text-[#424844] dark:text-neutral-300 hover:bg-red-600 hover:text-white hover:border-red-600 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600 flex items-center justify-center transition-all shadow-2xs cursor-pointer btn-delete-action"
+                      title="Remove image"
+                    >
+                      <span className="material-symbols-outlined text-[17px] text-current">delete</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Dropzone / Upload Action State */
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`w-full rounded-xl border-2 border-dashed p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2.5 ${
+                  isDragging
+                    ? 'border-[#112e20] bg-[#e6ede7]'
+                    : 'border-[#c2c8c2] bg-[#f8faf8] hover:bg-[#f0f5f1] hover:border-[#112e20]'
+                }`}
+              >
+                <div className="w-12 h-12 rounded-full bg-[#e6ede7] text-[#112e20] flex items-center justify-center shadow-xs">
+                  <span className="material-symbols-outlined text-[26px]">add_photo_alternate</span>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#181d1b] mb-1">Badge Accent</label>
-                  <select
-                    value={colorScheme}
-                    onChange={(e) => setColorScheme(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
-                  >
-                    <option value="green">Forest Silk (Green)</option>
-                    <option value="yellow">Champagne Gold (Yellow)</option>
-                    <option value="orange">Terracotta Rust (Orange)</option>
-                  </select>
+                  <p className="text-sm font-semibold text-[#112e20]">
+                    Click to upload promotional image
+                  </p>
+                  <p className="text-xs text-[#727973] mt-0.5">
+                    or drag & drop your banner file here (PNG, JPG, WebP)
+                  </p>
                 </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
+                  className="mt-1 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#112e20] text-white text-xs font-semibold hover:bg-[#284435] transition-colors shadow-xs cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">upload</span>
+                  <span>Upload Image</span>
+                </button>
               </div>
-            </>
-          ) : (
-            <>
-              <div>
-                <label className="block text-xs font-semibold text-[#181d1b] mb-1">
-                  Banner Campaign Headline
-                </label>
-                <input
-                  required
-                  value={bannerTitle}
-                  onChange={(e) => setBannerTitle(e.target.value)}
-                  placeholder="e.g. Winter Velvet Balayage & Botanical Steam"
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
-                />
-              </div>
+            )}
 
-              <div>
-                <label className="block text-xs font-semibold text-[#181d1b] mb-1">
-                  Validity Period
-                </label>
-                <input
-                  value={bannerValidity}
-                  onChange={(e) => setBannerValidity(e.target.value)}
-                  placeholder="e.g. Nov 01, 2024 – Dec 15, 2024"
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
-                />
-              </div>
+            {uploadError && (
+              <p className="text-xs text-[#ba1a1a] mt-1.5 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">error</span>
+                <span>{uploadError}</span>
+              </p>
+            )}
+          </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-[#181d1b] mb-1">
-                  Image Asset URL (16:9)
-                </label>
-                <input
-                  value={bannerUrl}
-                  onChange={(e) => setBannerUrl(e.target.value)}
-                  placeholder="Paste image link or leave empty for default"
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
-                />
-              </div>
-            </>
-          )}
+          {/* Active Status Switch */}
+          <div className="pt-2 flex items-center justify-between border-t border-[#eaefeb]">
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold text-[#181d1b]">
+                Active on Live Carousel
+              </span>
+              <span className="text-[11px] text-[#727973]">
+                Display this slide immediately to visiting clients
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsActive(!isActive)}
+              className={`w-11 h-6 rounded-full p-0.5 flex items-center transition-colors cursor-pointer ${
+                isActive ? 'bg-[#112e20] justify-end' : 'bg-[#c2c8c2] justify-start'
+              }`}
+            >
+              <span className="w-5 h-5 rounded-full bg-white shadow-xs"></span>
+            </button>
+          </div>
 
-          <div className="flex items-center justify-end gap-3 pt-2">
+          {/* Action Buttons */}
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#eaefeb]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-full text-xs font-semibold text-[#424844] hover:bg-[#eaefeb] transition-colors"
+              className="px-4 py-2 rounded-full text-xs font-semibold text-[#424844] hover:bg-[#eaefeb] transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-full bg-[#112e20] text-white text-xs font-semibold hover:bg-[#284435] transition-all shadow-md cursor-pointer"
+              className="px-5 py-2.5 rounded-full bg-[#112e20] text-white text-xs font-semibold hover:bg-[#284435] transition-all shadow-md cursor-pointer flex items-center gap-1.5"
             >
-              Publish Promotion
+              <span className="material-symbols-outlined text-[16px]">check</span>
+              <span>{bannerToEdit ? 'Save Changes' : 'Publish Carousel Slide'}</span>
             </button>
           </div>
         </form>

@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { Appointment, ServiceItem, Stylist } from '../../types';
+import { Appointment, ServiceItem, Stylist, StylistLeave, BlackoutDate } from '../../types';
 
 interface NewBookingModalProps {
   isOpen: boolean;
   onClose: () => void;
   services: ServiceItem[];
   stylists: Stylist[];
+  stylistLeaves?: StylistLeave[];
+  blackoutDates?: BlackoutDate[];
   onAddBooking: (booking: Appointment) => void;
+  initialDate?: string;
 }
 
 export const NewBookingModal: React.FC<NewBookingModalProps> = ({
@@ -14,27 +17,61 @@ export const NewBookingModal: React.FC<NewBookingModalProps> = ({
   onClose,
   services,
   stylists,
+  stylistLeaves = [],
+  blackoutDates = [],
   onAddBooking,
+  initialDate,
 }) => {
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
   const [clientTier, setClientTier] = useState<Appointment['clientTier']>('VIP Platinum');
   const [selectedServiceId, setSelectedServiceId] = useState(services[0]?.id || '');
   const [selectedStylistId, setSelectedStylistId] = useState(stylists[0]?.id || '');
   const [time, setTime] = useState('11:00 AM');
-  const [dateStr, setDateStr] = useState('Thursday, Oct 24');
+  const todayYMD = new Date().toISOString().split('T')[0];
+  const [dateStr, setDateStr] = useState(initialDate || todayYMD);
   const [notes, setNotes] = useState('');
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setDateStr(initialDate || new Date().toISOString().split('T')[0]);
+    }
+  }, [isOpen, initialDate]);
 
   if (!isOpen) return null;
 
   const selectedService = services.find((s) => s.id === selectedServiceId) || services[0];
   const selectedStylist = stylists.find((s) => s.id === selectedStylistId) || stylists[0];
-  const totalPrice = selectedService ? selectedService.price : 200;
-  const depositAmount = Math.round(totalPrice * 0.25);
+
+  const targetDateYMD = dateStr.toLowerCase() === 'today' ? todayYMD : dateStr;
+
+  const activeBlackouts = blackoutDates.filter((b) => {
+    if (!b.dateStr) return false;
+    return b.dateStr === targetDateYMD || (dateStr.toLowerCase() === 'today' && b.dateStr === todayYMD);
+  });
+
+  const fullDayClosure = activeBlackouts.find((b) => b.blockType === 'FULL_DAY');
+  const blockedSlotsList: string[] = [];
+  activeBlackouts.forEach((b) => {
+    if (b.blockType === 'TIME_SLOTS' && b.slots) {
+      blockedSlotsList.push(...b.slots);
+    }
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!clientName.trim()) return;
+
+    if (fullDayClosure) {
+      alert(`Cannot book: Salon has a scheduled full day closure on this date.`);
+      return;
+    }
+
+    if (blockedSlotsList.includes(time)) {
+      alert(`Cannot book: Time slot "${time}" is blocked in Schedule Control.`);
+      return;
+    }
 
     const initials = clientName
       .split(' ')
@@ -48,17 +85,15 @@ export const NewBookingModal: React.FC<NewBookingModalProps> = ({
       time,
       durationMin: selectedService?.durationMin || 60,
       clientName: clientName.trim(),
-      clientPhone: clientPhone.trim() || '(310) 555-0199',
+      clientPhone: clientPhone.trim() || '+91 96561 11149',
+      clientEmail: clientEmail.trim() || undefined,
       clientInitials: initials,
       clientTier,
       serviceName: selectedService ? selectedService.name : 'Custom Atelier Ritual',
-      station: selectedStylist ? selectedStylist.station : 'Styling Station',
-      stylistName: selectedStylist ? selectedStylist.name : 'Elena Vance',
+      station: selectedStylist ? selectedStylist.station : 'Styling Station Chair 1',
+      stylistName: selectedStylist ? selectedStylist.name : 'Niya',
       stylistAvatar: selectedStylist ? selectedStylist.avatar : '',
-      depositStatus: 'Deposit Paid',
-      depositAmount,
-      totalPrice,
-      status: 'CONFIRMED',
+      status: 'BOOKED',
       dateStr,
       notes: notes.trim(),
     };
@@ -79,7 +114,7 @@ export const NewBookingModal: React.FC<NewBookingModalProps> = ({
               <span className="text-[11px] text-[#9b4521] uppercase tracking-wider font-bold">
                 Guest Reservation
               </span>
-              <h3 className="font-serif text-2xl text-[#112e20]">New Atelier Booking</h3>
+              <h3 className="font-serif text-2xl text-[#112e20]">New Client Booking</h3>
             </div>
           </div>
           <button
@@ -100,7 +135,7 @@ export const NewBookingModal: React.FC<NewBookingModalProps> = ({
                 required
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
-                placeholder="e.g. Camille Vance"
+                placeholder="e.g. Athira P"
                 className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
               />
             </div>
@@ -111,13 +146,25 @@ export const NewBookingModal: React.FC<NewBookingModalProps> = ({
               <input
                 value={clientPhone}
                 onChange={(e) => setClientPhone(e.target.value)}
-                placeholder="+1 (310) 555-0192"
+                placeholder="+91 98470 12345"
                 className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-[#181d1b] mb-1">
+                Guest Email Address (Optional)
+              </label>
+              <input
+                type="email"
+                value={clientEmail}
+                onChange={(e) => setClientEmail(e.target.value)}
+                placeholder="guest@example.com"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
+              />
+            </div>
             <div>
               <label className="block text-xs font-semibold text-[#181d1b] mb-1">
                 Client Distinction
@@ -139,10 +186,10 @@ export const NewBookingModal: React.FC<NewBookingModalProps> = ({
                 Date & Manifest
               </label>
               <input
+                type="date"
                 value={dateStr}
                 onChange={(e) => setDateStr(e.target.value)}
-                placeholder="Thursday, Oct 24"
-                className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none cursor-pointer"
               />
             </div>
           </div>
@@ -159,7 +206,7 @@ export const NewBookingModal: React.FC<NewBookingModalProps> = ({
               >
                 {services.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.name} (${s.price} • {s.durationMin}m)
+                    {s.name} ({s.durationMin} mins)
                   </option>
                 ))}
               </select>
@@ -173,34 +220,104 @@ export const NewBookingModal: React.FC<NewBookingModalProps> = ({
                 onChange={(e) => setSelectedStylistId(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-lg bg-[#f0f5f1] border border-[#c2c8c2]/40 text-sm focus:bg-white focus:ring-1 focus:ring-[#112e20] outline-none"
               >
-                {stylists.map((st) => (
-                  <option key={st.id} value={st.id}>
-                    {st.name} ({st.role})
-                  </option>
-                ))}
+                {stylists.map((st) => {
+                  const hasLeave = stylistLeaves.find(
+                    (l) => l.stylistId === st.id || l.stylistName.toLowerCase() === st.name.toLowerCase()
+                  );
+                  return (
+                    <option key={st.id} value={st.id}>
+                      {st.name} ({st.role}){hasLeave ? ` • ⚠️ [On Leave: ${hasLeave.date}]` : ''}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           </div>
 
+          {/* Selected Stylist Leave Warning */}
+          {(() => {
+            const leave = stylistLeaves.find(
+              (l) => l.stylistId === selectedStylistId || l.stylistName.toLowerCase() === selectedStylist?.name.toLowerCase()
+            );
+            if (!leave) return null;
+            return (
+              <div className="p-2.5 bg-[#ffe088]/30 border border-[#ffe088] rounded-xl flex items-center gap-2 text-xs text-[#735c00]">
+                <span className="material-symbols-outlined text-[18px]">info</span>
+                <span>
+                  <strong>Roster Notice:</strong> {selectedStylist?.name} has scheduled leave on{' '}
+                  <strong>{leave.date}</strong> ({leave.duration === 'FULL_DAY' ? 'Full Day' : leave.duration === 'FIRST_HALF' ? 'Morning Shift' : 'Evening Shift'}).
+                </span>
+              </div>
+            );
+          })()}
+
+          {/* Full Day Closure Warning */}
+          {fullDayClosure && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-xs text-red-800">
+              <span className="material-symbols-outlined text-[18px] text-red-600 mt-0.5">do_not_disturb_on</span>
+              <div>
+                <strong className="block text-red-900 font-semibold">
+                  Date Blocked (Full Day Closure)
+                </strong>
+                <span>This date is closed for bookings in Schedule Control ({fullDayClosure.station || 'Entire Salon'}).</span>
+              </div>
+            </div>
+          )}
+
           <div>
-            <label className="block text-xs font-semibold text-[#181d1b] mb-1">
-              Time Slot
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              {['09:30 AM', '11:00 AM', '01:30 PM', '03:45 PM', '05:00 PM', '06:30 PM'].map((slot) => (
-                <button
-                  type="button"
-                  key={slot}
-                  onClick={() => setTime(slot)}
-                  className={`py-2 px-2 text-xs rounded-lg font-medium transition-all ${
-                    time === slot
-                      ? 'bg-[#112e20] text-white shadow-xs'
-                      : 'bg-[#f0f5f1] text-[#181d1b] hover:bg-[#eaefeb]'
-                  }`}
-                >
-                  {slot}
-                </button>
-              ))}
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold text-[#181d1b]">
+                Time Slot (1-Hour)
+              </label>
+              {blockedSlotsList.length > 0 && (
+                <span className="text-[11px] text-amber-700 font-medium flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">lock_clock</span>
+                  {blockedSlotsList.length} slot{blockedSlotsList.length > 1 ? 's' : ''} blocked
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+              {[
+                '10:00 AM',
+                '11:00 AM',
+                '12:00 PM',
+                '01:00 PM',
+                '02:00 PM',
+                '03:00 PM',
+                '04:00 PM',
+                '05:00 PM',
+                '06:00 PM',
+                '07:00 PM',
+                '08:00 PM',
+                '09:00 PM',
+                '10:00 PM',
+                '11:00 PM',
+                '12:00 AM',
+              ].map((slot) => {
+                const isBlocked = !!fullDayClosure || blockedSlotsList.includes(slot);
+                return (
+                  <button
+                    type="button"
+                    key={slot}
+                    disabled={isBlocked}
+                    onClick={() => setTime(slot)}
+                    className={`py-2 px-1 text-xs rounded-lg font-medium transition-all relative text-center ${
+                      isBlocked
+                        ? 'bg-red-50 text-red-400 border border-red-200 line-through cursor-not-allowed opacity-60'
+                        : time === slot
+                        ? 'bg-[#112e20] text-white shadow-xs font-bold'
+                        : 'bg-[#f0f5f1] text-[#181d1b] hover:bg-[#eaefeb]'
+                    }`}
+                  >
+                    <span>{slot}</span>
+                    {isBlocked && (
+                      <span className="block text-[8px] font-bold text-red-600 no-underline tracking-tighter">
+                        Blocked
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -217,14 +334,14 @@ export const NewBookingModal: React.FC<NewBookingModalProps> = ({
             />
           </div>
 
-          {/* Pricing & Deposit Summary */}
+          {/* Reservation Summary */}
           <div className="p-3.5 rounded-xl bg-[#f0f5f1] border border-[#dfe4e0] flex items-center justify-between text-xs">
             <div>
-              <span className="font-semibold text-[#112e20]">Service Value: ${totalPrice}</span>
-              <p className="text-[#424844] mt-0.5">25% online booking deposit: ${depositAmount}</p>
+              <span className="font-semibold text-[#112e20]">Estimated Duration: {selectedService?.durationMin || 60} mins</span>
+              <p className="text-[#424844] mt-0.5">Assigned to stylist station upon guest arrival</p>
             </div>
             <span className="px-2.5 py-1 rounded-full bg-[#112e20] text-white font-bold text-[11px] uppercase tracking-wider">
-              Deposit Collected
+              Confirmed Booking
             </span>
           </div>
 

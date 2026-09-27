@@ -18,7 +18,7 @@ export const ServiceMenuView: React.FC<ServiceMenuViewProps> = ({
   onDeleteService,
   globalSearchQuery = '',
 }) => {
-  const [activeCategory, setActiveCategory] = useState<'all' | 'hair' | 'spa'>('all');
+  const [activeCategory, setActiveCategory] = useState<'all' | 'hair' | 'skin' | 'spa' | 'groom' | 'bridal'>('all');
   const [localSearch, setLocalSearch] = useState('');
 
   const effectiveSearch = (globalSearchQuery || localSearch).toLowerCase().trim();
@@ -43,7 +43,7 @@ export const ServiceMenuView: React.FC<ServiceMenuViewProps> = ({
             Service Menu
           </h1>
           <p className="text-sm text-[#424844] mt-1">
-            Manage your salon services, timing, pricing, and online availability.
+            Manage your salon services, timing, and website availability.
           </p>
         </div>
 
@@ -80,47 +80,36 @@ export const ServiceMenuView: React.FC<ServiceMenuViewProps> = ({
       </div>
 
       {/* Category Tabs */}
-      <div className="flex items-center gap-2 mb-4">
-        <button
-          onClick={() => setActiveCategory('all')}
-          className={`px-5 py-2 rounded-full text-[13px] font-medium shadow-xs transition-all cursor-pointer ${
-            activeCategory === 'all'
-              ? 'bg-[#112e20] text-white'
-              : 'bg-[#eaefeb] text-[#181d1b] hover:bg-[#e5e9e6]'
-          }`}
-        >
-          All
-        </button>
-        <button
-          onClick={() => setActiveCategory('hair')}
-          className={`px-5 py-2 rounded-full text-[13px] font-medium transition-all cursor-pointer ${
-            activeCategory === 'hair'
-              ? 'bg-[#112e20] text-white shadow-xs'
-              : 'bg-[#eaefeb] text-[#181d1b] hover:bg-[#e5e9e6]'
-          }`}
-        >
-          Hair
-        </button>
-        <button
-          onClick={() => setActiveCategory('spa')}
-          className={`px-5 py-2 rounded-full text-[13px] font-medium transition-all cursor-pointer ${
-            activeCategory === 'spa'
-              ? 'bg-[#112e20] text-white shadow-xs'
-              : 'bg-[#eaefeb] text-[#181d1b] hover:bg-[#e5e9e6]'
-          }`}
-        >
-          Spa & Wellness
-        </button>
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+        {[
+          { id: 'all', label: 'All Services' },
+          { id: 'hair', label: 'Hair' },
+          { id: 'skin', label: 'Skin Care' },
+          { id: 'spa', label: 'Spa & Nails' },
+          { id: 'groom', label: 'Pre-Groom' },
+          { id: 'bridal', label: 'Pre-Bridal' },
+        ].map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => setActiveCategory(cat.id as any)}
+            className={`px-4 py-2 rounded-full text-[13px] font-medium transition-all whitespace-nowrap cursor-pointer ${
+              activeCategory === cat.id
+                ? 'bg-[#112e20] text-white shadow-xs'
+                : 'bg-[#eaefeb] text-[#181d1b] hover:bg-[#e5e9e6]'
+            }`}
+          >
+            {cat.label}
+          </button>
+        ))}
       </div>
 
       {/* Clean Service Table */}
       <div className="bg-white rounded-xl shadow-sm border border-[#c2c8c2]/30 overflow-hidden">
         {/* Table Header */}
         <div className="grid grid-cols-12 gap-4 px-6 py-3.5 bg-[#f0f5f1] border-b border-[#c2c8c2]/30 text-[#424844] text-[11px] uppercase tracking-wider font-semibold select-none">
-          <div className="col-span-6">Service</div>
+          <div className="col-span-8">Service & Description</div>
           <div className="col-span-2 text-center">Duration</div>
-          <div className="col-span-2 text-center">Price</div>
-          <div className="col-span-1 text-center">Show on Website</div>
+          <div className="col-span-1 text-center">Website Display</div>
           <div className="col-span-1 text-right">Actions</div>
         </div>
 
@@ -136,7 +125,7 @@ export const ServiceMenuView: React.FC<ServiceMenuViewProps> = ({
                 key={svc.id}
                 className="grid grid-cols-12 gap-4 items-center px-6 py-4 hover:bg-[#f0f5f1]/40 transition-colors"
               >
-                <div className="col-span-6 flex flex-col">
+                <div className="col-span-8 flex flex-col">
                   <span className="text-base text-[#112e20] font-semibold">
                     {svc.name}
                   </span>
@@ -152,10 +141,6 @@ export const ServiceMenuView: React.FC<ServiceMenuViewProps> = ({
                   <span>{svc.durationMin} min</span>
                 </div>
 
-                <div className="col-span-2 text-center text-lg text-[#112e20] font-bold">
-                  ${svc.price}
-                </div>
-
                 <div className="col-span-1 flex items-center justify-center">
                   <button
                     type="button"
@@ -169,20 +154,22 @@ export const ServiceMenuView: React.FC<ServiceMenuViewProps> = ({
                   </button>
                 </div>
 
-                <div className="col-span-1 flex items-center justify-end gap-1">
+                <div className="col-span-1 flex items-center justify-end gap-1.5">
                   <button
+                    type="button"
                     onClick={() => onEditService(svc)}
-                    className="p-2 rounded-full text-[#424844] hover:text-[#112e20] hover:bg-[#eaefeb] transition-colors cursor-pointer"
+                    className="w-8 h-8 rounded-xl border border-[#c2c8c2]/50 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-[#eaefeb] dark:hover:bg-white/10 text-[#424844] dark:text-neutral-200 hover:text-[#112e20] dark:hover:text-white flex items-center justify-center transition-all shadow-2xs cursor-pointer"
                     title="Edit Service"
                   >
-                    <span className="material-symbols-outlined text-[18px]">edit</span>
+                    <span className="material-symbols-outlined text-[17px] text-current">edit</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => onDeleteService(svc.id)}
-                    className="p-2 rounded-full text-[#424844] hover:text-[#ba1a1a] hover:bg-[#ffdad6]/40 transition-colors cursor-pointer"
+                    className="w-8 h-8 rounded-xl border border-[#c2c8c2]/50 dark:border-white/10 bg-white dark:bg-white/5 text-[#424844] dark:text-neutral-300 hover:bg-red-600 hover:text-white hover:border-red-600 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600 flex items-center justify-center transition-all shadow-2xs cursor-pointer btn-delete-action"
                     title="Delete Service"
                   >
-                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                    <span className="material-symbols-outlined text-[17px] text-current">delete</span>
                   </button>
                 </div>
               </div>

@@ -9,7 +9,7 @@ export type NavTab =
   | 'concierge-desk'
   | 'atelier-settings';
 
-export type AppointmentStatus = 'CONFIRMED' | 'IN_SESSION' | 'PENDING' | 'COMPLETED' | 'CANCELLED';
+export type AppointmentStatus = 'BOOKED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 
 export interface Appointment {
   id: string;
@@ -17,15 +17,13 @@ export interface Appointment {
   durationMin: number;
   clientName: string;
   clientPhone: string;
+  clientEmail?: string;
   clientInitials: string;
   clientTier?: 'VIP Platinum' | 'VIP Gold' | 'VIP Member' | 'New Guest' | 'Standard';
   serviceName: string;
   station: string;
   stylistName: string;
   stylistAvatar: string;
-  depositStatus: 'Deposit Paid' | 'Pending Deposit' | 'Complimentary' | 'Full Paid';
-  depositAmount?: number;
-  totalPrice: number;
   status: AppointmentStatus;
   dateStr: string; // e.g. "2024-10-24"
   notes?: string;
@@ -45,17 +43,23 @@ export interface BlackoutDate {
   id: string;
   month: string;
   day: string;
-  title: string;
+  title?: string;
   timeRange: string;
-  description: string;
+  description?: string;
+  dateStr?: string;
+  blockType?: 'FULL_DAY' | 'TIME_SLOTS';
+  slots?: string[];
+  station?: string;
+  createdAt?: string;
 }
+
+export type ServiceCategory = 'hair' | 'skin' | 'spa' | 'groom' | 'bridal';
 
 export interface ServiceItem {
   id: string;
   name: string;
-  category: 'hair' | 'spa';
+  category: ServiceCategory;
   durationMin: number;
-  price: number;
   description: string;
   showOnWebsite: boolean;
 }
@@ -72,6 +76,7 @@ export interface PromoCode {
 export interface CarouselBanner {
   id: string;
   title: string;
+  tag?: string;
   validity: string;
   imageUrl: string;
   isActive: boolean;
@@ -83,12 +88,24 @@ export interface Stylist {
   role: string;
   avatar: string;
   station: string;
-  specialty: string;
+  specialty?: string;
   appointmentsCount: number;
   rating: number;
   reviewsCount: number;
-  bio: string;
+  bio?: string;
   isAvailableToday: boolean;
+}
+
+export type LeaveDuration = 'FULL_DAY' | 'FIRST_HALF' | 'SECOND_HALF';
+
+export interface StylistLeave {
+  id: string;
+  stylistId: string;
+  stylistName: string;
+  date: string; // "YYYY-MM-DD" e.g. "2024-10-28"
+  duration: LeaveDuration; // 'FULL_DAY' | 'FIRST_HALF' (Morning) | 'SECOND_HALF' (Afternoon/Evening)
+  reason?: string;
+  createdAt: string;
 }
 
 export interface VIPClient {
@@ -122,8 +139,23 @@ export interface SalonSettings {
   phone: string;
   email: string;
   address: string;
-  requireOnlineDeposit: boolean;
   reschedulePolicy24h: boolean;
   smsWhatsappReminders: boolean;
   emailCalendarInvites: boolean;
+  darkMode?: boolean;
+  whatsappBotConnected?: boolean;
+  whatsappBotPhone?: string;
+}
+
+export type SystemRole = 'Admin' | 'Developer' | 'Manager' | 'Staff';
+
+export interface UserAccount {
+  id: string;
+  name: string;
+  email: string;
+  role: SystemRole;
+  roleTitle: string;
+  initials: string;
+  password: string;
+  createdAt: string;
 }

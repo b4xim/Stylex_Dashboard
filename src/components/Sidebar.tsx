@@ -27,7 +27,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badgeColor: 'bg-[#9b4521] text-white',
     },
     { id: 'schedule-control', label: 'Schedule Control', icon: 'calendar_month' },
-    { id: 'artisans-and-stylists', label: 'Artisans & Stylists', icon: 'content_cut' },
+    { id: 'artisans-and-stylists', label: 'Stylists', icon: 'content_cut' },
     { id: 'service-menu', label: 'Service Menu', icon: 'spa' },
     { id: 'promotions', label: 'Promotions', icon: 'auto_awesome' },
     { id: 'clients-and-vip', label: 'Clients & VIP', icon: 'stars' },
@@ -38,23 +38,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: unreadConciergeCount > 0 ? String(unreadConciergeCount) : undefined,
       badgeColor: 'bg-[#735c00] text-white',
     },
-    { id: 'atelier-settings', label: 'Atelier Settings', icon: 'tune' },
+    { id: 'atelier-settings', label: 'Admin Settings', icon: 'tune' },
   ];
 
   return (
     <aside className="fixed left-0 top-0 h-full w-72 bg-[#112e20] text-white z-50 flex flex-col justify-between shadow-[0_4px_24px_rgba(17,46,32,0.12)]">
       <div className="flex flex-col">
         {/* Brand Header */}
-        <div className="h-20 px-6 flex items-center gap-3 bg-[#112e20] border-b border-[#284435]/50">
+        <div className="h-20 px-6 flex items-center bg-[#112e20] border-b border-[#284435]/50">
           <img
-            alt="StyleX Signature Atelier"
-            className="h-9 w-auto object-contain"
+            alt="StyleX Signature Salon"
+            className="h-10 w-auto max-w-[210px] object-contain"
             src={LOGO_URL}
           />
-          <div className="flex flex-col">
-            <span className="font-serif text-2xl text-[#f6faf7] tracking-tight leading-none">StyleX</span>
-            <span className="text-[11px] text-[#aeceba] uppercase tracking-widest font-bold mt-1">Signature Atelier</span>
-          </div>
         </div>
 
         {/* Navigation Core */}
@@ -71,10 +67,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   key={item.id}
                   onClick={() => onTabChange(item.id)}
-                  className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-all text-left group ${
+                  className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-colors text-left font-semibold border-l-2 ${
                     isActive
-                      ? 'bg-[#284435] text-white font-semibold shadow-inner border-l-2 border-[#9b4521]'
-                      : 'text-[#aeceba] hover:bg-[#284435]/70 hover:text-white'
+                      ? 'bg-[#284435] text-white border-[#9b4521]'
+                      : 'text-[#aeceba] hover:bg-[#284435]/70 hover:text-white border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-3">

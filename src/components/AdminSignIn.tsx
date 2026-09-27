@@ -1,61 +1,97 @@
 import React, { useState } from 'react';
+import { UserAccount } from '../types';
 
 interface AdminSignInProps {
-  onSignInSuccess: () => void;
+  onSignInSuccess: (user: UserAccount) => void;
   onCancel?: () => void;
+  users: UserAccount[];
 }
 
-export const AdminSignIn: React.FC<AdminSignInProps> = ({ onSignInSuccess, onCancel }) => {
-  const [email, setEmail] = useState('admin@stylexsalon.com');
+export const AdminSignIn: React.FC<AdminSignInProps> = ({
+  onSignInSuccess,
+  onCancel,
+  users,
+}) => {
+  const [email, setEmail] = useState('admin@stylexsalon.in');
   const [password, setPassword] = useState('stylex2024');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
     setIsLoading(true);
+
     setTimeout(() => {
+      const cleanEmail = email.trim().toLowerCase();
+      const matchedUser = users.find(
+        (u) => u.email.trim().toLowerCase() === cleanEmail
+      );
+
+      if (!matchedUser) {
+        setIsLoading(false);
+        setErrorMessage('No staff account found with this email address.');
+        return;
+      }
+
+      if (matchedUser.password !== password) {
+        setIsLoading(false);
+        setErrorMessage('Incorrect password. Please verify and try again.');
+        return;
+      }
+
       setIsLoading(false);
-      onSignInSuccess();
-    }, 400);
+      onSignInSuccess(matchedUser);
+    }, 350);
   };
 
   return (
-    <div className="min-h-screen bg-[#f6faf7] flex items-center justify-center p-6 antialiased">
+    <div className="min-h-screen bg-[#f6faf7] dark:bg-[#0f1713] flex items-center justify-center p-6 antialiased">
       <main className="w-full max-w-md mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-8 sm:p-10 border border-[#c2c8c2]/40 relative">
+        <div className="bg-white dark:bg-[#15201a] rounded-2xl shadow-xl p-8 sm:p-10 border border-[#c2c8c2]/40 dark:border-[#2b3a32] relative">
           {onCancel && (
             <button
               onClick={onCancel}
-              className="absolute top-4 right-4 text-[#727973] hover:text-[#181d1b] p-1.5 rounded-full hover:bg-[#f0f5f1] transition-colors"
-              title="Return to Atelier"
+              className="absolute top-4 right-4 text-[#727973] hover:text-[#181d1b] dark:text-[#8d9c94] dark:hover:text-white p-1.5 rounded-full hover:bg-[#f0f5f1] dark:hover:bg-[#1f2d25] transition-colors cursor-pointer"
+              title="Return to Dashboard"
             >
               <span className="material-symbols-outlined text-[20px]">close</span>
             </button>
           )}
 
           <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#caead5]/50 text-[#112e20] mb-2">
-              <span className="material-symbols-outlined text-[22px]">spa</span>
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#caead5]/50 dark:bg-[#1a382a] text-[#112e20] dark:text-[#7cebb0] mb-2 shadow-xs">
+              <span className="material-symbols-outlined text-[24px]">spa</span>
             </div>
-            <p className="text-[11px] uppercase tracking-widest text-[#9b4521] font-bold mb-1">
-              StyleX Atelier
+            <p className="text-[11px] uppercase tracking-widest text-[#9b4521] dark:text-[#ff9266] font-bold mb-1">
+              StyleX Signature Salon
             </p>
-            <h1 className="font-serif text-3xl text-[#112e20] font-medium tracking-tight">
-              Admin Sign In
+            <h1 className="font-serif text-3xl text-[#112e20] dark:text-white font-medium tracking-tight">
+              Tirur Outlet Command
             </h1>
-            <p className="text-sm text-[#424844] mt-1">
-              Enter your credentials to access atelier management
+            <p className="text-xs text-[#424844] dark:text-[#a0aca4] mt-1">
+              Sign in with your registered salon operator email
             </p>
           </div>
 
+          {/* Error Alert */}
+          {errorMessage && (
+            <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 flex items-start gap-2.5 text-xs text-red-700 dark:text-red-300 animate-in fade-in duration-200">
+              <span className="material-symbols-outlined text-[18px] shrink-0 text-red-600 dark:text-red-400">
+                error
+              </span>
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-[#181d1b] mb-1.5" htmlFor="email-address">
+              <label className="block text-xs font-semibold text-[#181d1b] dark:text-[#d3ded8] mb-1.5" htmlFor="email-address">
                 Email Address
               </label>
               <div className="relative rounded-lg shadow-2xs">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#424844]">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#424844] dark:text-[#8a9890]">
                   <span className="material-symbols-outlined text-[18px]">alternate_email</span>
                 </div>
                 <input
@@ -63,28 +99,24 @@ export const AdminSignIn: React.FC<AdminSignInProps> = ({ onSignInSuccess, onCan
                   id="email-address"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@stylexsalon.com"
-                  className="block w-full pl-11 pr-4 py-3 text-sm rounded-lg bg-[#f0f5f1] text-[#181d1b] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#9b4521] border border-transparent focus:border-transparent transition-all"
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setErrorMessage('');
+                  }}
+                  placeholder="name@stylexsalon.in"
+                  className="block w-full pl-11 pr-4 py-3 text-sm rounded-lg bg-[#f0f5f1] dark:bg-[#1a2520] text-[#181d1b] dark:text-white focus:outline-none focus:bg-white dark:focus:bg-[#202e26] focus:ring-2 focus:ring-[#9b4521] border border-transparent focus:border-transparent transition-all"
                 />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-[#181d1b]" htmlFor="password">
+                <label className="block text-xs font-semibold text-[#181d1b] dark:text-[#d3ded8]" htmlFor="password">
                   Password
                 </label>
-                <button
-                  type="button"
-                  onClick={() => alert("Password reset link sent to registered atelier master email.")}
-                  className="text-xs text-[#9b4521] hover:text-[#752906] transition-colors cursor-pointer"
-                >
-                  Forgot?
-                </button>
               </div>
               <div className="relative rounded-lg shadow-2xs">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#424844]">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#424844] dark:text-[#8a9890]">
                   <span className="material-symbols-outlined text-[18px]">key</span>
                 </div>
                 <input
@@ -92,15 +124,18 @@ export const AdminSignIn: React.FC<AdminSignInProps> = ({ onSignInSuccess, onCan
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setErrorMessage('');
+                  }}
                   placeholder="••••••••••••"
-                  className="block w-full pl-11 pr-11 py-3 text-sm rounded-lg bg-[#f0f5f1] text-[#181d1b] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#9b4521] border border-transparent focus:border-transparent tracking-widest transition-all"
+                  className="block w-full pl-11 pr-11 py-3 text-sm rounded-lg bg-[#f0f5f1] dark:bg-[#1a2520] text-[#181d1b] dark:text-white focus:outline-none focus:bg-white dark:focus:bg-[#202e26] focus:ring-2 focus:ring-[#9b4521] border border-transparent focus:border-transparent tracking-widest transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label="Toggle password visibility"
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#424844] hover:text-[#181d1b] transition-colors cursor-pointer"
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#424844] dark:text-[#8a9890] hover:text-[#181d1b] dark:hover:text-white transition-colors cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[18px]">
                     {showPassword ? 'visibility_off' : 'visibility'}
@@ -115,7 +150,7 @@ export const AdminSignIn: React.FC<AdminSignInProps> = ({ onSignInSuccess, onCan
                 disabled={isLoading}
                 className="w-full bg-[#9b4521] hover:bg-[#752906] text-white py-3.5 px-6 rounded-full text-sm font-semibold tracking-wide flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform active:scale-[0.99] transition-all cursor-pointer group disabled:opacity-75"
               >
-                <span>{isLoading ? 'Verifying Atelier Access...' : 'Sign In'}</span>
+                <span>{isLoading ? 'Verifying Credentials...' : 'Sign In'}</span>
                 <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">
                   arrow_forward
                 </span>
@@ -123,9 +158,9 @@ export const AdminSignIn: React.FC<AdminSignInProps> = ({ onSignInSuccess, onCan
             </div>
           </form>
 
-          <div className="mt-6 pt-4 border-t border-[#eaefeb] text-center">
-            <p className="text-xs text-[#727973]">
-              StyleX Signature Salon • Private Staff Portal
+          <div className="mt-6 pt-4 border-t border-[#eaefeb] dark:border-[#243029] text-center">
+            <p className="text-xs text-[#727973] dark:text-[#8a9890]">
+              Registered Salon Accounts • Automatic Profile Recognition
             </p>
           </div>
         </div>
